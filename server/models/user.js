@@ -3,6 +3,7 @@ const validator = require('validator');
 
 // {
 //   email: 'andrew@example.com',
+//   username: 'helloworld',
 //   password: 'adpsofijasdfmpoijwerew',
 //   tokens: [{
 //     access: 'auth',
@@ -21,6 +22,11 @@ var User = mongoose.model('User', {
       validator: validator.isEmail,
       message: '{VALUE} is not a valid email'
     }
+  },
+  username: {
+    type: String,
+    require: true,
+    minlength: 1
   },
   password: {
     type: String,
