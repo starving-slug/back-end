@@ -26,6 +26,8 @@ var User = mongoose.model('User', {
   username: {
     type: String,
     require: true,
+    trim: true,
+    unique: true,
     minlength: 1
   },
   password: {
