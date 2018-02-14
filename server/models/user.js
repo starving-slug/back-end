@@ -45,6 +45,6 @@ var User = mongoose.model('User', {
       required: true
     }
   }]
-}); 
+});
 
 module.exports = {User}
