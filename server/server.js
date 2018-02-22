@@ -22,8 +22,8 @@ app.use(bodyParser.json());
 
 // POST /users
 app.post('/users', (req, res) => {
-  var body = _.pick(req.body, ['email', 'username', 'password']);
-  var user = new User(body);
+  let body = _.pick(req.body, ['email', 'username', 'password']);
+  let user = new User(body);
 
   user.save().then((user) => {
     res.send(user);
@@ -33,22 +33,17 @@ app.post('/users', (req, res) => {
 });
 
 // GET /users/:id
-app.get('/users/:id',(req, res) => {
-  var id = req.params.id;
+app.get('/users/:username',(req, res) => {
+  let uname = req.params.username;
 
-  if (!ObjectID.isValid(id)) {
-    return res.status(404).send();
-  }
-
-  User.findById(id).then((user) => {
-    if (!user) {
-      return res.status(404).send();
+  User.findOne({'username': uname}, 'email username tokens').then((user) => {
+    if (user) {
+      res.status(200).send(user);
     }
-
-    res.send({user});
+    res.status(404).send();
   }).catch((e) => {
-    res.status(400).send();
-  })
+    res.status(404).send(e);
+  });
 });
 
 app.listen(port, () => {
