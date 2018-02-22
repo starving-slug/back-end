@@ -19,6 +19,10 @@ db.once('open', function() {
 });
 
 app.use(bodyParser.json());
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  next();
+})
 
 // POST /users
 app.post('/users', (req, res) => {
@@ -32,7 +36,7 @@ app.post('/users', (req, res) => {
   })
 });
 
-// GET /users/:id
+// GET /users/username
 app.get('/users/:username',(req, res) => {
   let uname = req.params.username;
 
