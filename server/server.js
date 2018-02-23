@@ -8,6 +8,7 @@ const {ObjectID} = require('mongodb');
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
+var {Recipe} = require('./models/recipe');
 
 var app = express();
 const port = process.env.PORT;
@@ -49,6 +50,31 @@ app.get('/users/:username',(req, res) => {
     res.status(404).send(e);
   });
 });
+
+app.post('/recipe', (req, res) => {
+  let body = req.body;
+  let recipe = new Recipe(body);
+  recipe.directions = body.directions;
+  console.log(body);
+  console.log(recipe);
+
+  recipe.save().then((recipe) => {
+    res.status(200).send('Successfully saved recipe!');
+  }).catch((e) => {
+    res.status(e.staus || 400).send(e);
+  })
+})
+
+app.get('/recipe/:id', (req, res) => {
+  let id = req.params.id;
+
+  Recipe.findOne({'recipe_id': id}).then((recipe) => {
+    if (recipe) {
+      res.status(200).send(recipe);
+    }
+    res.status(404).send();
+  }).catch(e => res.status(404).send(e));
+})
 
 app.listen(port, () => {
   console.log(`Started up at port ${port}`);
