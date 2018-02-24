@@ -5,14 +5,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
 
-var {mongoose} = require('./db/mongoose');
-var {User} = require('./models/user');
-var {Recipe} = require('./models/recipe');
+let {mongoose} = require('./db/mongoose');
+let {User} = require('./models/user');
+let {Recipe} = require('./models/recipe');
 
-var app = express();
+let app = express();
 const port = process.env.PORT;
 
-var db = mongoose.connection;
+let db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
   console.log("Connected to database!");
@@ -50,12 +50,11 @@ app.get('/users/:username',(req, res) => {
   });
 });
 
+// POST /recipe
 app.post('/recipe', (req, res) => {
-  let body = req.body;
+  let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'ingredients', 'directions', 'tags']);
   let recipe = new Recipe(body);
   recipe.directions = body.directions;
-  console.log(body);
-  console.log(recipe);
 
   recipe.save().then((recipe) => {
     res.status(200).send('Successfully saved recipe!');
@@ -64,9 +63,20 @@ app.post('/recipe', (req, res) => {
   })
 })
 
+
+// GET /recipe/:id
 app.get('/recipe/:id', (req, res) => {
   let id = req.params.id;
 
+  // if id is not valid
+  if(!ObjectID.isValid(id)) {
+    res.status(400).send();
+  }
+
+  // find recipe by ID
+  Recipe.findById(id).then(() => {
+    
+  });
   Recipe.findOne({'recipe_id': id}).then((recipe) => {
     if (recipe) {
       res.status(200).send(recipe);

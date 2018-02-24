@@ -2,13 +2,6 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 
 var Recipe = mongoose.model('Recipe', {
-  id: {
-    type: String,
-    require: true,
-    trim: true,
-    unique: true,
-    minlength: 1
-  },
   name: {
     type: String,
     require: true,
@@ -19,14 +12,13 @@ var Recipe = mongoose.model('Recipe', {
     type: String,
     required: true,
     trim: true,
-    minlength: 1,
+    minlength: 1
   },
   description: [{
     type: String,
     required: true,
     trim: true,
-    minlength: 1,
-    unique: false
+    minlength: 1
   }],
   photo: {
     type: String,
