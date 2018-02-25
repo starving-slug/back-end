@@ -54,7 +54,7 @@ app.get('/users/:username',(req, res) => {
 app.post('/recipe', (req, res) => {
   let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'ingredients', 'directions', 'tags']);
   let recipe = new Recipe(body);
-  recipe.directions = body.directions;
+  
 
   recipe.save().then((recipe) => {
     res.status(200).send('Successfully saved recipe!');
@@ -75,7 +75,7 @@ app.get('/recipe/:id', (req, res) => {
 
   // find recipe by ID
   Recipe.findById(id).then(() => {
-    
+
   });
   Recipe.findOne({'recipe_id': id}).then((recipe) => {
     if (recipe) {

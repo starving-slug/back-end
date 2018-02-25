@@ -4,7 +4,7 @@ const validator = require('validator');
 var Recipe = mongoose.model('Recipe', {
   name: {
     type: String,
-    require: true,
+    required: true,
     trim: true,
     minlength: 1
   },
@@ -22,7 +22,7 @@ var Recipe = mongoose.model('Recipe', {
   }],
   photo: {
     type: String,
-    require: false,
+    required: false,
     minlength: 1
   },
   ingredients: [{
@@ -36,19 +36,17 @@ var Recipe = mongoose.model('Recipe', {
     }
   }],
   directions: [{
-    direction: {
       type: String,
       required: true
-    }
   }],
   tags: [{
     text: {
       type: String,
-      require: true
+      required: true
     },
     path: {
       type: String,
-      require: true
+      required: true
     }
   }]
 });
