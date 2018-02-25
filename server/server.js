@@ -46,7 +46,7 @@ app.get('/users/:username',(req, res) => {
     }
     res.status(404).send();
   }).catch((e) => {
-    res.status(404).send(e);
+    res.status(400).send(e);
   });
 });
 
@@ -59,7 +59,7 @@ app.post('/recipe', (req, res) => {
   recipe.save().then((recipe) => {
     res.status(200).send('Successfully saved recipe!');
   }).catch((e) => {
-    res.status(e.staus || 400).send(e);
+    res.status(e.status || 400).send(e);
   })
 })
 
@@ -70,19 +70,27 @@ app.get('/recipe/:id', (req, res) => {
 
   // if id is not valid
   if(!ObjectID.isValid(id)) {
-    res.status(400).send();
+    res.send(400).send(); // bad request
   }
 
-  // find recipe by ID
-  Recipe.findById(id).then(() => {
-
-  });
-  Recipe.findOne({'recipe_id': id}).then((recipe) => {
-    if (recipe) {
+  Recipe.findById(id, (err, recipe) => {
+    if(recipe) {
       res.status(200).send(recipe);
     }
     res.status(404).send();
-  }).catch(e => res.status(404).send(e));
+  }).catch((e) => {
+    res.status(400).send(e);
+  });
+
+  // // find recipe by ID
+  // Recipe.findById(id).then((recipe) => {
+  //   if(recipe) {
+  //     res.send(200).send(recipe);
+  //   }
+  //   res.status(404).send();
+  // }).catch((e) => {
+  //   res.status(400).send(e);
+  // });
 })
 
 app.listen(port, () => {
