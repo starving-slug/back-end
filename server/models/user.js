@@ -25,14 +25,14 @@ var User = mongoose.model('User', {
   },
   username: {
     type: String,
-    require: true,
+    required: true,
     trim: true,
     unique: true,
     minlength: 1
   },
   password: {
     type: String,
-    require: true,
+    required: true,
     minlength: 6
   },
   tokens: [{
