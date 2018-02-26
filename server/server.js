@@ -45,22 +45,25 @@ app.use((req, res, next) => {
 // POST /users
 app.post('/users', (req, res) => {
   let token = _.pick(req.body, ['id_token']).id_token;
-
-  let user;
+  let userInfo = {
+    "email": undefined,
+    "first_name": undefined,
+    "last_name": undefined
+  }
   const url = `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${token}`;
   request.get(url, (error, response, body) => {
     let json = JSON.parse(body);
-
+    console.log(json);
     // create user
-    user = {
-      "email": json.email,
-      "first_name": json.given_name,
-      "last_name": json.family_name
-    }
-
-    console.log(user);
+    userInfo.email = json.email;
+    userInfo.first_name = json.given_name;
+    userInfo.last_name = json.family_name;
   });
+  console.log(userInfo);
+  let user = new User(userInfo);
 
+  console.log(user);
+  console.log(user.email);
   // save user
   user.save().then((user) => {
     res.status(200).send("Successfully created User");
