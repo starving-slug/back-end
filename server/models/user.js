@@ -23,28 +23,33 @@ var User = mongoose.model('User', {
       message: '{VALUE} is not a valid email'
     }
   },
-  username: {
+  first_name: {
     type: String,
     required: true,
-    trim: true,
-    unique: true,
     minlength: 1
   },
-  password: {
+  last_name: {
     type: String,
     required: true,
-    minlength: 6
+    minlength: 1
   },
-  tokens: [{
-    access: {
-      type: String,
-      required: true
-    },
-    token: {
-      type: String,
-      required: true
-    }
-  }]
+  // username: {
+  //   type: String,
+  //   required: true,
+  //   trim: true,
+  //   unique: true,
+  //   minlength: 1
+  // },
+  // tokens: [{
+  //   access: {
+  //     type: String,
+  //     required: true
+  //   },
+  //   token: {
+  //     type: String,
+  //     required: true
+  //   }
+  // }]
 });
 
 module.exports = {User}

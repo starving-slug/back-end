@@ -7,6 +7,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
 const Promise = require('bluebird');
+// const {OAuth2Client} = require('google-auth-library');
+// const client = new OAuth2Client("163621476624-55cuuke78c1krolj8a5fndp6es9nvopt.apps.googleusercontent.com");
+const request = require('request');
 
 let {mongoose} = require('./db/mongoose');
 let {User} = require('./models/user');
@@ -22,6 +25,17 @@ db.once('open', function() {
   console.log("Connected to database!");
 });
 
+// async function verify(token) {
+//   const ticket = await client.verifyIdToken({
+//       idToken: token,
+//       audience: "163621476624-55cuuke78c1krolj8a5fndp6es9nvopt.apps.googleusercontent.com",
+//   });
+//   const payload = ticket.getPayload();
+//   const userid = payload['sub'];
+//   // If request specified a G Suite domain:
+//   //const domain = payload['hd'];
+// }
+
 app.use(bodyParser.json());
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -30,25 +44,40 @@ app.use((req, res, next) => {
 
 // POST /users
 app.post('/users', (req, res) => {
-  let body = _.pick(req.body, ['email', 'username', 'password']);
-  let user = new User(body);
+  let token = _.pick(req.body, ['id_token']).id_token;
 
+  let user;
+  const url = `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${token}`;
+  request.get(url, (error, response, body) => {
+    let json = JSON.parse(body);
+
+    // create user
+    user = {
+      "email": json.email,
+      "first_name": json.given_name,
+      "last_name": json.family_name
+    }
+
+    console.log(user);
+  });
+
+  // save user
   user.save().then((user) => {
     res.status(200).send("Successfully created User");
   }).catch((e) => {
     res.status(400).send({message: e.message});
-  })
+  });
 });
 
 // GET /users/username
-app.get('/users/:username',(req, res) => {
-  let uname = req.params.username;
+app.get('/users/:email',(req, res) => {
+  let emailAddress = req.params.email;
 
-  User.findOne({'username': uname}, 'email username tokens').then((user) => {
+  User.findOne({'email': emailAddress}, 'email first_name last_name').then((user) => {
     if (user) {
       res.status(200).send(user);
     } else {
-      res.status(404).send(`${uname} not found :(`);
+      res.status(404).send(`${emailAddress} not found :(`);
     }
   }).catch((e) => {
     res.status(400).send({message: e.message});
