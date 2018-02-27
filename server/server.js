@@ -56,25 +56,31 @@ app.get('/users/:username',(req, res) => {
 });
 
 // GET /search
-app.get('/search?=:tag', (req, res) => {
-  let tagList = req.params.tag;
-  let recipeList = Recipe.find({'tags': tagList}, '_id name description');
+app.get('/search', (req, res) => {
+  // Example test:
+  // GET localhost:3000/search?author=theShaGu&tag=omega-3&tag=Meat
+  // req.query.author = theShaGu
+  // req.query.tag = ['omega-3', 'Meat']
+  console.log(req.query.name);
+  console.log(req.query.author);
+  console.log(req.query.tag);
 
-  Recipe.find({'author': uname}, '_id name description').then((recipes) => {
+  let nameList = req.query.name; // Search only works for one name
+  let authorList = req.query.author;
+  let tagList = req.query.tag;
+
+  // Search by recipe fields
+  Recipe.find({$or: [{'name': {'$regex': nameList, '$options': 'i'}}, {'author': authorList}, {'tags.text': tagList}]}, '_id name author description ingredients tags').then((recipes) => {
     console.log(recipes);
     if (recipes) {
-      let response = {
-        usename: uname,
-        description: 'Test description',
-        recipes: recipes
-      }
-      console.log(response)
+      let response = recipes;
       res.status(200).send(response);
     }
+    console.log("recipe(s) not found");
     res.status(404).send();
   }).catch((e) => {
     res.status(400).send({message: e.message})
-  })
+  });
 });
 
 // POST profile
