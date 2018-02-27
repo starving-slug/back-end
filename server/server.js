@@ -52,6 +52,28 @@ app.get('/users/:username',(req, res) => {
   });
 });
 
+// GET /search
+app.get('/search?=:tag', (req, res) => {
+  let tagList = req.params.tag;
+  let recipeList = Recipe.find({'tags': tagList}, '_id name description');
+
+  Recipe.find({'author': uname}, '_id name description').then((recipes) => {
+    console.log(recipes);
+    if (recipes) {
+      let response = {
+        usename: uname,
+        description: 'Test description',
+        recipes: recipes
+      }
+      console.log(response)
+      res.status(200).send(response);
+    }
+    res.status(404).send();
+  }).catch((e) => {
+    res.status(400).send({message: e.message})
+  })
+});
+
 // POST profile
 app.post('/setProfile', (req, res) => {
   let body = _.pick(req.body, ['user', 'description', 'image']);

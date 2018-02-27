@@ -1,0 +1,9 @@
+
+email: "herb@gmail.com",
+username: "herb",
+password: "anchovy",
+tokens: [{
+     access: 'auth',
+     token: 'poijasdpfoimasdpfjiweproijwer'
+}]
+
