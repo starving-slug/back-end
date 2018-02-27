@@ -22,33 +22,36 @@ const {Profile} = require('./../models/profile');
 //   }).then(() => done());
 // });
 
-const users = [{
-    _id: new ObjectID(),
-    email: 'kevinloi@example.com',
-    username: 'KevLoi',
-    password: 'iHateJullig'
-}, {
-    _id: new ObjectID(),
-    email: 'justinR@outlook.com',
-    username: 'JustinR',
-    password: 'stylingIsFun'
-}, {
-    _id: new ObjectID(),
-    email: 'shashank.guduru@gmail.com',
-    username: 'theShaGu',
-    password: '1234567'
-}];
+// const users = [{
+//     _id: new ObjectID(),
+//     email: 'kevinloi@example.com',
+//     username: 'KevLoi',
+//     password: 'iHateJullig'
+// }, {
+//     _id: new ObjectID(),
+//     email: 'justinR@outlook.com',
+//     username: 'JustinR',
+//     password: 'stylingIsFun'
+// }, {
+//     _id: new ObjectID(),
+//     email: 'shashank.guduru@gmail.com',
+//     username: 'theShaGu',
+//     password: '1234567'
+// }];
 
 // erase all user and profile data before testing
 beforeEach((done) => {
     User.remove({}).then(() => {
-        return User.insertMany(users);
-    }).then(() => done());
+        done());
+    });
+    // User.remove({}).then(() => {
+    //     return User.insertMany(users);
+    // }).then(() => done());
 });
-
-beforeEach((done) => {
-    Profile.remove({}).then(() => done());
-});
+//
+// beforeEach((done) => {
+//     Profile.remove({}).then(() => done());
+// });
 
 // test POST users
 describe('POST /users', () => {
@@ -72,7 +75,7 @@ describe('POST /users', () => {
                     return done(err);
                 }
 
-                User.find({email, username, password}).then((users) => {
+                User.find({username, email, password}).then((users) => {
                     expect(users.length).toBe(1);
                     expect(users[0].username).toBe(username);
                     done();
@@ -85,65 +88,69 @@ describe('POST /users', () => {
             // }).catch((e) => done(e));
     });
 
-    // empty array to make sure it runs correctly
-    it('should not create a new user with invalid data', (done) => {
-        request(app)
-            .post('/users')
-            .send({})
-            .expect(400)
-            .end((err, res) => {
-                if(err) {
-                    return done(err);
-                }
-
-                User.find().then((users) => {
-                    expect(users.length).toBe(3);
-                    done();
-                }).catch((e) => done(e));
-            });
-    })
+    // // empty array to make sure it runs correctly
+    // it('should not create a new user with invalid data', (done) => {
+    //     request(app)
+    //         .post('/users')
+    //         .send({})
+    //         .expect(400)
+    //         .end((err, res) => {
+    //             if(err) {
+    //                 return done(err);
+    //             }
+    //
+    //             User.find().then((users) => {
+    //                 expect(users.length).toBe(3);
+    //                 done();
+    //             }).catch((e) => done(e));
+    //         });
+    // })
 });
 
-// test GET users/username
-describe('GET /users/:username', () => {
-    it('should get one user', (done) => {
-        var username = 'KevLoi';
-
-        request(app)
-            .get(`/users/${users[0].username}`)
-            .expect(200)
-            .expect((res) => {
-                expect(res.body.username).toBe(username);
-            })
-            .end(done);
-    });
-});
+// // test GET users/username
+// describe('GET /users/:username', () => {
+//     it('should get one user', (done) => {
+//         var username = 'KevLoi';
+//
+//         request(app)
+//             .get(`/users/${users[0].username}`)
+//             .expect(200)
+//             .expect((res) => {
+//                 expect(res.body.username).toBe(username);
+//             })
+//             .end(done);
+//     });
+// });
 
 // test POST setProfile
-describe('POST /setProfile', () => {
-    it('should create a profile', (done) => {
-        var username = "shashank_oddessey";
-        var image = "HelloWorld";
-        var description = "Shashank likes to code and cook food";
-
-        request(app)
-            .post('/setProfile')
-            .send({username, image, description})
-            .expect(200)
-            .expect((res) => {
-                expect(res.body.username).toBe(username);
-                expect(res.body.image).toBe(image);
-                expect(res.body.description).toBe(description);
-            })
-            .end((err, res) => {
-                if(err) {
-                    return done(err);
-                }
-
-                
-            });
-    });
-});
+// describe('POST /setProfile', () => {
+//     it('should create a profile', (done) => {
+//         var username = "shashank_oddessey";
+//         var image = "HelloWorld";
+//         var description = "Shashank likes to code and cook food";
+//
+//         request(app)
+//             .post('/setProfile')
+//             .send({username, image, description})
+//             .expect(200)
+//             .expect((res) => {
+//                 expect(res.body.username).toBe(username);
+//                 expect(res.body.image).toBe(image);
+//                 expect(res.body.description).toBe(description);
+//             })
+//             .end((err, res) => {
+//                 if(err) {
+//                     return done(err);
+//                 }
+//
+//                 Profile.find({username}).then((profiles) => {
+//                     expect(profiles.length).toBe(1);
+//                     expect(profiles[0].username).toBe(username);
+//                     done();
+//                 }).catch((e) => done(e));
+//             });
+//     });
+// });
 
 
 // describe('GET /users/:username', () => {
