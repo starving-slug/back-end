@@ -1,3 +1,5 @@
+"use strict";
+
 require('./config/config');
 
 const _ = require('lodash');
@@ -32,7 +34,7 @@ app.post('/users', (req, res) => {
   let user = new User(body);
 
   user.save().then((user) => {
-    res.send(user);
+    res.status(200).send("Successfully created User");
   }).catch((e) => {
     res.status(400).send({message: e.message});
   })
@@ -45,8 +47,9 @@ app.get('/users/:username',(req, res) => {
   User.findOne({'username': uname}, 'email username tokens').then((user) => {
     if (user) {
       res.status(200).send(user);
+    } else {
+      res.status(404).send(`${uname} not found :(`);
     }
-    res.status(404).send();
   }).catch((e) => {
     res.status(400).send({message: e.message});
   });
@@ -91,7 +94,7 @@ app.post('/setProfile', (req, res) => {
 })
 
 // Get user profile
-app.get('/profile/:username', (req, res) => {
+app.get('/', (req, res) => {
   let uname = req.params.username;
   let recipeList = Recipe.find({'author': uname}, '_id name description');
   let profileReq = Profile.findOne({'username': uname}, 'username image description');
@@ -134,7 +137,7 @@ app.post('/recipe', (req, res) => {
   let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'ingredients', 'directions', 'tags']);
   let recipe = new Recipe(body);
 
-
+  // save recipe
   recipe.save().then((recipe) => {
     res.status(200).send('Successfully saved recipe!');
   }).catch((e) => {
@@ -142,6 +145,9 @@ app.post('/recipe', (req, res) => {
   })
 })
 
+function saveRecipeToUser(recipe) {
+
+}
 
 // GET /recipe/:id
 app.get('/recipe/:id', (req, res) => {
