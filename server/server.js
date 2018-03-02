@@ -100,7 +100,7 @@ app.post('/setProfile', (req, res) => {
 })
 
 // Get user profile
-app.get('/', (req, res) => {
+app.get('/profile/:username', (req, res) => {
   let uname = req.params.username;
   let recipeList = Recipe.find({'author': uname}, '_id name description');
   let profileReq = Profile.findOne({'username': uname}, 'username image description');
