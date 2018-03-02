@@ -74,7 +74,7 @@ app.get('/search', (req, res) => {
       let response = recipes;
       res.status(200).send(response);
     }
-    console.log("recipe(s) not found");
+    if (recipes.length < 1) console.log("recipe(s) not found");
     res.status(404).send();
   }).catch((e) => {
     res.status(400).send({message: e.message})
@@ -210,21 +210,17 @@ app.patch('/recipe/edit/:id', (req, res) => {
   let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'ingredients', 'directions', 'tags']);
 
   console.log(body);
-  console.log("finding recipe");
   if(!ObjectID.isValid(id)) {
     res.status(400).send({message: 'Recipe ID is invalid'}); // bad request
     return;
   }
 
-  // Needs checking, probably pretty shady
-  Recipe.update({"_id": ObjectID(id)}, {"$set" : body}, function(err, recipe) {
-    if (err) {
-      console.log("Error updating recipe: " + err);
-      res.send({"error": "An error has occured"});
-    }else {
-      console.log("recipe updated");
-    }
-  });
+  Recipe.findOneAndUpdate({"_id": ObjectID(id)}, {"$set" : body}).then((recipe) => {
+    res.status(200).send('Successfully updated recipe!');
+    console.log("recipe updated");
+  }).catch((e) => {
+    res.status(e.status || 400).send(e);
+  })
 });
 
 app.listen(port, () => {
