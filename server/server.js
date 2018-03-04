@@ -25,6 +25,7 @@ db.once('open', function() {
 app.use(bodyParser.json());
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
+  res.header("Access-Control-Allow-Headers", "Authorization, Content-Type, Access-Control-Allow-Origin, X-Requested-With");
   next();
 })
 
@@ -58,9 +59,9 @@ app.get('/users/:username',(req, res) => {
 // GET /search
 app.get('/search', (req, res) => {
   // Example test:
-  // GET localhost:3000/search?author=KevLoi&tag=omega&tag=Meat
+  // GET localhost:3000/search?author=KevLoi&tag=omega&tag=meat
   // req.query.author = KevLoi
-  // req.query.tag = ['omega', 'Meat']
+  // req.query.tag = ['omega', 'meat']
   // returns all recipes by author KevLoi that has both tag substrings, omega and Meat
   // or simple a test: GET localhost:3000/search => returns all recipes
   let nameList = setRegex(req.query.name);
@@ -155,11 +156,16 @@ app.get('/profile/:username', (req, res) => {
 app.post('/recipe', (req, res) => {
   let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'ingredients', 'directions', 'tags']);
   let recipe = new Recipe(body);
+  console.log(body);
 
+  console.log("server received recipe");
+  console.log(recipe);
   // save recipe
   recipe.save().then((recipe) => {
+    console.log("server saved recipe");
     res.status(200).send('Successfully saved recipe!');
   }).catch((e) => {
+    console.log("server unable to save");
     res.status(e.status || 400).send(e);
   })
 })
@@ -220,7 +226,7 @@ app.patch('/recipe/edit/:id', (req, res) => {
     console.log("recipe updated");
   }).catch((e) => {
     res.status(e.status || 400).send(e);
-  })
+  });
 });
 
 app.listen(port, () => {
