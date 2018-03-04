@@ -74,9 +74,9 @@ app.get('/search', (req, res) => {
     if (recipes) {
       let response = recipes;
       res.status(200).send(response);
+    } else if (recipes.length < 1) console.log("recipe(s) not found");
+      res.status(404).send();
     }
-    if (recipes.length < 1) console.log("recipe(s) not found");
-    res.status(404).send();
   }).catch((e) => {
     res.status(400).send({message: e.message})
   });
@@ -145,8 +145,9 @@ app.get('/profile/:username', (req, res) => {
       }
       console.log(response)
       res.status(200).send(response);
+    } else {
+      res.status(404).send();
     }
-    res.status(404).send();
   }).catch((e) => {
     res.status(400).send({message: e.message})
   })
@@ -186,9 +187,10 @@ app.get('/recipe/:id', (req, res) => {
     if(recipe) {
       console.log('success!');
       res.status(200).send(recipe);
+    } else {
+      console.log('not found');
+      res.status(404).send({message: `Recipe ${id} not found`});
     }
-    console.log('not found');
-    res.status(404).send();
   }).catch((e) => {
     console.log(e);
     res.status(400).send(e);
