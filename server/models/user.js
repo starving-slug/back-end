@@ -23,6 +23,13 @@ var User = mongoose.model('User', {
       message: '{VALUE} is not a valid email'
     }
   },
+  username: {
+    type: String,
+    required: true,
+    trim: true,
+    unique: true,
+    minlength: 1
+  },
   first_name: {
     type: String,
     required: true,
@@ -33,13 +40,6 @@ var User = mongoose.model('User', {
     required: true,
     minlength: 1
   },
-  // username: {
-  //   type: String,
-  //   required: true,
-  //   trim: true,
-  //   unique: true,
-  //   minlength: 1
-  // },
   // tokens: [{
   //   access: {
   //     type: String,
