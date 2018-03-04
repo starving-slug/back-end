@@ -44,10 +44,7 @@ app.post('/users', (req, res) => {
   rp(url)
     .then((body) => {
       let json = JSON.parse(body);
-
-      userInfo.email = json.email;
-      userInfo.first_name = json.given_name;
-      userInfo.last_name = json.family_name;
+      console.log(json);
 
       let userExist = false;
 
@@ -73,8 +70,9 @@ app.post('/users', (req, res) => {
       });
 
     })
-    .catch(function (err) {
+    .catch(function (e) {
       console.log("doesn't work");
+      res.status(400).send({message: e.message});
     });
 });
 
@@ -111,7 +109,8 @@ app.get('/search', (req, res) => {
     if (recipes) {
       let response = recipes;
       res.status(200).send(response);
-    } else if (recipes.length < 1) console.log("recipe(s) not found");
+    } else if (recipes.length < 1) {
+      console.log("recipe(s) not found");
       res.status(404).send();
     }
   }).catch((e) => {
