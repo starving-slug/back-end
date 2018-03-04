@@ -8,6 +8,9 @@ const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
 const Promise = require('bluebird');
 
+const {OAuth2Client} = require('google-auth-library');
+const client = new OAuth2Client('')
+
 let {mongoose} = require('./db/mongoose');
 let {User} = require('./models/user');
 let {Recipe} = require('./models/recipe');
@@ -146,7 +149,7 @@ app.get('/profile/:username', (req, res) => {
       console.log(response)
       res.status(200).send(response);
     }
-    res.status(404).send();
+    res.status(404).send({message: `Author ${uname} has no recipes`});
   }).catch((e) => {
     res.status(400).send({message: e.message})
   })
@@ -159,7 +162,7 @@ app.post('/recipe', (req, res) => {
 
   // save recipe
   recipe.save().then((recipe) => {
-    res.status(200).send('Successfully saved recipe!');
+    res.status(200).send({message: 'Successfully saved recipe!'});
   }).catch((e) => {
     res.status(e.status || 400).send(e);
   })
@@ -184,14 +187,14 @@ app.get('/recipe/:id', (req, res) => {
   Recipe.findById(id, (err, recipe) => {
     console.log('3');
     if(recipe) {
-      console.log('success!');
+      console.log({message: 'success!'});
       res.status(200).send(recipe);
     }
     console.log('not found');
-    res.status(404).send();
+    res.status(404).send({message: `Recipe ${id} not found`});
   }).catch((e) => {
     console.log(e);
-    res.status(400).send(e);
+    res.status(e.status || 400).send({message: e.message});
   });
 
   // // find recipe by ID
@@ -217,10 +220,10 @@ app.patch('/recipe/edit/:id', (req, res) => {
   }
 
   Recipe.findOneAndUpdate({"_id": ObjectID(id)}, {"$set" : body}).then((recipe) => {
-    res.status(200).send('Successfully updated recipe!');
+    res.status(200).send({message: 'Successfully updated recipe!'});
     console.log("recipe updated");
   }).catch((e) => {
-    res.status(e.status || 400).send(e);
+    res.status(e.status || 400).send({message: e.message});
   });
 });
 
