@@ -74,7 +74,8 @@ app.get('/search', (req, res) => {
     if (recipes) {
       let response = recipes;
       res.status(200).send(response);
-    } else if (recipes.length < 1) console.log("recipe(s) not found");
+    } else if (recipes.length < 1) {
+      console.log("recipe(s) not found");
       res.status(404).send();
     }
   }).catch((e) => {
