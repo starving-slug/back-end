@@ -156,16 +156,11 @@ app.get('/profile/:username', (req, res) => {
 app.post('/recipe', (req, res) => {
   let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'ingredients', 'directions', 'tags']);
   let recipe = new Recipe(body);
-  console.log(body);
 
-  console.log("server received recipe");
-  console.log(recipe);
   // save recipe
   recipe.save().then((recipe) => {
-    console.log("server saved recipe");
     res.status(200).send('Successfully saved recipe!');
   }).catch((e) => {
-    console.log("server unable to save");
     res.status(e.status || 400).send(e);
   })
 })
