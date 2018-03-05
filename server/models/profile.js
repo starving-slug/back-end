@@ -18,7 +18,11 @@ var Profile = mongoose.model('Profile', {
     type: String,
     require: false,
     minlength: 1,
-  }
+  },
+  bookmarks: [{
+    type: String,
+    required: true,
+  }]
 });
 
 module.exports = {Profile}

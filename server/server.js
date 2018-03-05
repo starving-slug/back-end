@@ -74,7 +74,8 @@ app.get('/search', (req, res) => {
     if (recipes) {
       let response = recipes;
       res.status(200).send(response);
-    } else if (recipes.length < 1) console.log("recipe(s) not found");
+    } else if (recipes.length < 1) {
+      console.log("recipe(s) not found");
       res.status(404).send();
     }
   }).catch((e) => {
@@ -97,60 +98,107 @@ function setRegex(list) {
   return listReg;
 }
 
-// POST profile
-app.post('/setProfile', (req, res) => {
-  let body = _.pick(req.body, ['user', 'description', 'image']);
-  console.log(body);
-  // test user for valid session
-  let profile = new Profile({username: body.user.name, image: body.image, description: body.description});
+app.post('/bookmark/:id', (req, res) => {
+  console.log(req.params)
+  let recipe_id = req.params.id;
+  let body = _.pick(req.body, ['username']);
+  Recipe.findOne({"_id": ObjectID(recipe_id)}, 'name').then((recipe) => {
+    console.log(recipe);
 
-  profile.save().then((foo) => {
-    console.log(foo);
-    res.status(200).send({message: `Successfully saved profile for ${body.user.name}`});
+    let query = {username: body.username};
+    let update = {bookmarks: [recipe_id]};
+
+    console.log(update);
+    Profile.findOneAndUpdate(query, {"$push" : update}).then((profile) => {
+      console.log(profile);
+      res.status(200).send({message: `Successfully bookmarked recipe id ${recipe_id}`});
+    });
   }).catch((e) => {
     console.log(e.message);
-    res.status(400).send({message: e.message});
-  });
+    res.status(e.status || 500).send({message: e.message || "There was an error bookmarking " + recipe_id});
+  })
+})
+
+app.post('/unbookmark/:id', (req, res) => {
+  console.log(req.params)
+  let recipe_id = req.params.id;
+  let body = _.pick(req.body, ['username']);
+  Recipe.findOne({"_id": ObjectID(recipe_id)}, 'name').then((recipe) => {
+    console.log(recipe);
+
+    let query = {username: body.username};
+    let update = {bookmarks: [recipe_id]};
+
+    console.log(update);
+    Profile.findOneAndUpdate(query, {"$pull" : update}).then((profile) => {
+      console.log(profile);
+      res.status(200).send({message: `Successfully bookmarked recipe id ${recipe_id}`});
+    });
+  }).catch((e) => {
+    console.log(e.message);
+    res.status(e.status || 500).send({message: e.message || "There was an error bookmarking " + recipe_id});
+  })
+})
+
+// POST profile
+app.post('/profile', (req, res) => {
+  let body = _.pick(req.body, ['username', 'description', 'image']);
+  let query = {username: body.username};
+  console.log(body);
+  if (body.username !== undefined) {
+    Profile.findOneAndUpdate(query, body, {upsert: true}).then((profile) => {
+      console.log('Saved profile', profile)
+      res.status(200).send({message: `Successfully saved profile for ${body.username}`, profile: profile})
+    }).catch((e) => {
+      console.log(e.message);
+      res.status(e.status || 400).send({message: e.message || `Something went wrong while saving user profile: ${body.username}`});
+    })
+  } else {
+    res.status(400).send({message: "No username attached"});
+  }
 })
 
 // Get user profile
 app.get('/profile/:username', (req, res) => {
   let uname = req.params.username;
   let recipeList = Recipe.find({'author': uname}, '_id name description');
-  let profileReq = Profile.findOne({'username': uname}, 'username image description');
+  let profileReq = Profile.findOne({'username': uname}, 'username image description bookmarks');
 
-  // let promise = Promise.join(recipeList, profileReq, function(recipes, profile) {
-  //   console.log(recipes, profile);
-  //   if (recipes && profile) {
-  //     let response = {
-  //       username: profile.username,
-  //       description: profile.description,
-  //       image: profile.image,
-  //       recipes: recipes
-  //     }
-  //     res.status(200).send(response);
-  //   }
-  //   res.status(404).send();
-  // }).catch((e) => {
-  //   res.status(400).send({message: e.message});
-  // })
 
-  Recipe.find({'author': uname}, '_id name description').then((recipes) => {
-    console.log(recipes);
-    if (recipes) {
+  let promise = Promise.join(recipeList, profileReq, (recipes, profile) => {
+    console.log(recipes, profile);
+    if (profile) {
       let response = {
-        usename: uname,
-        description: 'Test description',
-        recipes: recipes
+        username: profile.username,
+        image: profile.image,
+        description: profile.description,
+        bookmarks: profile.bookmarks,
+        recipes: recipes || []
       }
-      console.log(response)
       res.status(200).send(response);
     } else {
-      res.status(404).send();
+      res.status(404).send({message: `Missing profile info for ${uname}`});
     }
   }).catch((e) => {
-    res.status(400).send({message: e.message})
+    res.status(400).send({message: e.message});
   })
+
+  // Recipe.find({'author': uname}, '_id name description').then((recipes) => {
+  //   console.log(recipes);
+  //   if (recipes) {
+  //     let response = {
+  //       usename: uname,
+  //       description: 'Test description',
+  //       recipes: recipes
+  //     }
+  //     console.log(response)
+  //     res.status(200).send(response);
+  //   } else {
+  //     res.status(404).send();
+  //   }
+  // }).catch((e) => {
+  //   res.status(400).send({message: e.message})
+  // })
 })
 
 // POST /recipe
