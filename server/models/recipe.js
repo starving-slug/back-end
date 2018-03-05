@@ -47,6 +47,14 @@ var Recipe = mongoose.model('Recipe', {
       type: String,
       required: true
     }
+  }],
+  comments: [{
+    comment: {
+      type: String
+    },
+    author: {
+      type: String
+    }
   }]
 });
 
