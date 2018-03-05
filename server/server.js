@@ -69,7 +69,7 @@ app.get('/search', (req, res) => {
   let tagList = setRegex(req.query.tag);
 
   // Search: { (n1 OR n2 OR ... OR nk) AND (a1 OR a2 OR ... OR ak) AND (tag1 AND tag2 AND ... AND tagk) }
-  Recipe.find({'$and': [{'name': nameList}, {'author': authorList}, {'tags.text': {'$all': tagList}}]}, '_id name author description tags').then((recipes) => {
+  Recipe.find({'$and': [{'name': nameList}, {'author': authorList}, {'tags': {'$all': tagList}}]}, '_id name author description tags').then((recipes) => {
     console.log(recipes);
     if (recipes) {
       let response = recipes;
@@ -156,7 +156,7 @@ app.get('/profile/:username', (req, res) => {
 
 // POST /recipe
 app.post('/recipe', (req, res) => {
-  let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'ingredients', 'directions', 'tags']);
+  let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'price', 'ingredients', 'directions', 'tags', 'rating']);
   let recipe = new Recipe(body);
 
   // save recipe
@@ -211,7 +211,7 @@ app.get('/recipe/:id', (req, res) => {
 // PATCH /recipe/edit/:id
 app.patch('/recipe/edit/:id', (req, res) => {
   let id = req.params.id;
-  let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'ingredients', 'directions', 'tags']);
+  let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'price', 'ingredients', 'directions', 'tags', 'rating']);
 
   console.log(body);
   if(!ObjectID.isValid(id)) {
