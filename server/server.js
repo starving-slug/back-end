@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const { ObjectID } = require('mongodb');
 const Promise = require('bluebird');
 const rp = require('request-promise');
+const session = require('client-sessions');
 
 let { mongoose } = require('./db/mongoose');
 let { User } = require('./models/user');
@@ -30,6 +31,13 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Headers", "Authorization, Content-Type, Access-Control-Allow-Origin, X-Requested-With");
   next();
 })
+
+app.use(session({
+  cookieName: 'session',
+  secret: 'random_string_goes_here',
+  duration: 30 * 60 * 1000,
+  activeDuration: 5 * 60 * 1000
+}));
 
 // POST User
 // authenticates id_token
@@ -59,9 +67,11 @@ app.post('/users', (req, res) => {
       User.find({ 'username': user.username}).exec((err, docs) => {
         if (docs.length) {
           // user exists
+          req.session.user = user;
           res.status(200).send("Found user, sending back user session token");
         } else {
           user.save().then((user) => {
+            req.session.user = user;
             res.status(200).send("Successfully created User, sending back user session token");
           }).catch((e) => {
             res.status(400).send({ message: e.message });
