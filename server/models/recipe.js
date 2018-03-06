@@ -14,21 +14,28 @@ var Recipe = mongoose.model('Recipe', {
     trim: true,
     minlength: 1
   },
-  description: [{
+  description: {
     type: String,
     required: true,
     trim: true,
     minlength: 1
-  }],
+  },
   photo: {
     type: String,
-    required: false,
-    minlength: 1
+    required: false
+  },
+  price: {
+    type: String,
+    required: false
+  },
+  rating: {
+    type: Number,
+    required: false
   },
   ingredients: [{
     amount: {
       type: String,
-      required: true
+      required: false
     },
     text: {
       type: String,
@@ -36,18 +43,12 @@ var Recipe = mongoose.model('Recipe', {
     }
   }],
   directions: [{
-      type: String,
-      required: true
+    type: String,
+    required: true
   }],
   tags: [{
-    text: {
-      type: String,
-      required: true
-    },
-    path: {
-      type: String,
-      required: true
-    }
+    type: String,
+    required: true
   }]
 });
 
