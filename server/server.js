@@ -65,12 +65,12 @@ app.post('/users', (req, res) => {
 
       // check if user exists already
       User.find({'email': user.email}).exec((err, docs) => {
-        console.log(docs);
         if (docs && docs.length) {
           // user exists
           req.session.user = user;
           res.status(200).send({message: "Found user, sending back user session token"});
         } else {
+          req.session.user = user;
           res.status(200).send({message: "Successfully created User, sending back user session token", newlogin: true});
           // Promise.join(user.save(), Profile.findOneAndUpdate({'username': username}, {"$set" : {'image': image}}, {'upsert': true}))
           // .then((user, profile) => {
