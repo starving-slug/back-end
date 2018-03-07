@@ -37,26 +37,23 @@ app.use((req, res, next) => {
 // sends back user session token
 app.post('/users', (req, res) => {
   let token = _.pick(req.body, ['id_token']).id_token;
-  let username = _.pick(req.body, ['username']).username;
 
   const url = `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${token}`;
 
   rp(url)
     .then((body) => {
       let json = JSON.parse(body);
-      console.log(json);
 
       let userExist = false;
 
       let user = new User({
         "email": json.email,
-        "username": username,
         "first_name": json.given_name,
         "last_name": json.family_name,
       });
 
       // check if user exists already
-      User.find({ 'username': user.username}).exec((err, docs) => {
+      User.find({ 'email': user.email}).exec((err, docs) => {
         if (docs.length) {
           // user exists
           res.status(200).send("Found user, sending back user session token");
