@@ -6,47 +6,45 @@ const { app } = require('./../server');
 const { User } = require('./../models/user');
 const { Profile } = require('./../models/profile');
 
-const users = [{
-<<<<<<< HEAD
-    _id: new ObjectID(),
-    email: 'kevinloi@example.com',
-    username: 'KevLoi',
-    password: 'febreezehawaiian'
-}, {
-    _id: new ObjectID(),
-    email: 'justinR@outlook.com',
-    username: 'JustinR',
-    password: 'stylingIsFun'
-}, {
-    _id: new ObjectID(),
-    email: 'shashank.guduru@gmail.com',
-    username: 'theShaGu',
-    password: '1234567'
-=======
-  _id: new ObjectID(),
-  email: 'test1@example.com',
-  username: 'test1',
-  first_name: "test1",
-  last_name: "baby1"
-},
-{
-  _id: new ObjectID(),
-  email: 'test2@example.com',
-  username: 'test2',
-  first_name: "test2",
-  last_name: "baby2"
-},
-{
-  _id: new ObjectID(),
-  email: 'test3@example.com',
-  username: 'test3',
-  first_name: "test3",
-  last_name: "baby3"
->>>>>>> cbf3d60b038e1d37ecf0431a640d650264123a66
-}];
+// const users = [{
+// <<<<<<< HEAD
+//     _id: new ObjectID(),
+//     email: 'kevinloi@example.com',
+//     username: 'KevLoi',
+//     password: 'febreezehawaiian'
+// }, {
+//     _id: new ObjectID(),
+//     email: 'justinR@outlook.com',
+//     username: 'JustinR',
+//     password: 'stylingIsFun'
+// }, {
+//     _id: new ObjectID(),
+//     email: 'shashank.guduru@gmail.com',
+//     username: 'theShaGu',
+//     password: '1234567'
+// =======
+//   _id: new ObjectID(),
+//   email: 'test1@example.com',
+//   username: 'test1',
+//   first_name: "test1",
+//   last_name: "baby1"
+// },
+// {
+//   _id: new ObjectID(),
+//   email: 'test2@example.com',
+//   username: 'test2',
+//   first_name: "test2",
+//   last_name: "baby2"
+// },
+// {
+//   _id: new ObjectID(),
+//   email: 'test3@example.com',
+//   username: 'test3',
+//   first_name: "test3",
+//   last_name: "baby3"
+// >>>>>>> cbf3d60b038e1d37ecf0431a640d650264123a66
+// }];
 
-
-//
 beforeEach((done) => {
   Profile.remove({}).then(() => done());
 });
