@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const { ObjectID } = require('mongodb');
 const Promise = require('bluebird');
 const rp = require('request-promise');
+const session = require('client-sessions');
 
 let { mongoose } = require('./db/mongoose');
 let { User } = require('./models/user');
@@ -31,13 +32,21 @@ app.use((req, res, next) => {
   next();
 })
 
+app.use(session({
+  cookieName: 'session',
+  secret: 'random_string_goes_here',
+  duration: 30 * 60 * 1000,
+  activeDuration: 5 * 60 * 1000
+}));
+
 // POST User
 // authenticates id_token
 // creates a new user if username does not exist
 // sends back user session token
 app.post('/users', (req, res) => {
-  let token = _.pick(req.body, ['id_token']).id_token;
+  let token = req.body.id_token;
 
+  console.log("/users running");
   const url = `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${token}`;
 
   rp(url)
@@ -52,23 +61,33 @@ app.post('/users', (req, res) => {
         "last_name": json.family_name,
       });
 
+      let image = json.picture;
+
       // check if user exists already
-      User.find({ 'email': user.email}).exec((err, docs) => {
-        if (docs.length) {
+      User.find({'email': user.email}).exec((err, docs) => {
+        if (docs && docs.length) {
           // user exists
-          res.status(200).send("Found user, sending back user session token");
+          req.session.user = user;
+          res.status(200).send({message: "Found user, sending back user session token"});
         } else {
-          user.save().then((user) => {
-            res.status(200).send("Successfully created User, sending back user session token");
-          }).catch((e) => {
-            res.status(400).send({ message: e.message });
-          });
+          req.session.user = user;
+          res.status(200).send({message: "Successfully created User, sending back user session token", newlogin: true});
+          // Promise.join(user.save(), Profile.findOneAndUpdate({'username': username}, {"$set" : {'image': image}}, {'upsert': true}))
+          // .then((user, profile) => {
+          //   console.log(user);
+          //   console.log(profile);
+          //   req.session.user = user;
+          //   res.status(200).send({message: "Successfully created User, sending back user session token", newlogin: true});
+          // }).catch((e) => {
+          //   console.log(e.message);
+          //   res.status(400).send({ message: e.message });
+          // });
         }
       });
 
     })
     .catch(function (e) {
-      console.log("doesn't work");
+      console.log("An error occurred", e.message);
       res.status(400).send({message: e.message});
     });
 });
