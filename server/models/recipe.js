@@ -24,6 +24,14 @@ var Recipe = mongoose.model('Recipe', {
     type: String,
     required: false
   },
+  price: {
+    type: String,
+    required: false
+  },
+  rating: {
+    type: Number,
+    required: false
+  },
   ingredients: [{
     amount: {
       type: String,
@@ -35,12 +43,26 @@ var Recipe = mongoose.model('Recipe', {
     }
   }],
   directions: [{
-      type: String,
-      required: true
-  }],
-  tags: [{
     type: String,
     required: true
+  }],
+  tags: [{
+    text: {
+      type: String,
+      required: true
+    },
+    path: {
+      type: String,
+      required: true
+    }
+  }],
+  comments: [{
+    comment: {
+      type: String
+    },
+    author: {
+      type: String
+    }
   }]
 });
 

@@ -5,20 +5,23 @@ require('./config/config');
 const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
-const {ObjectID} = require('mongodb');
+const { ObjectID } = require('mongodb');
 const Promise = require('bluebird');
+const rp = require('request-promise');
+const session = require('client-sessions');
 
-let {mongoose} = require('./db/mongoose');
-let {User} = require('./models/user');
-let {Recipe} = require('./models/recipe');
-let {Profile} = require('./models/profile');
+let { mongoose } = require('./db/mongoose');
+let { User } = require('./models/user');
+let { Recipe } = require('./models/recipe');
+let { Profile } = require('./models/profile');
+
 
 let app = express();
 const port = process.env.PORT;
 
 let db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function() {
+db.once('open', function () {
   console.log("Connected to database!");
 });
 
@@ -29,30 +32,78 @@ app.use((req, res, next) => {
   next();
 })
 
-// POST /users
-app.post('/users', (req, res) => {
-  let body = _.pick(req.body, ['email', 'username', 'password']);
-  let user = new User(body);
+app.use(session({
+  cookieName: 'session',
+  secret: 'random_string_goes_here',
+  duration: 30 * 60 * 1000,
+  activeDuration: 5 * 60 * 1000
+}));
 
-  user.save().then((user) => {
-    res.status(200).send("Successfully created User");
-  }).catch((e) => {
-    res.status(400).send({message: e.message});
-  })
+// POST User
+// authenticates id_token
+// creates a new user if username does not exist
+// sends back user session token
+app.post('/users', (req, res) => {
+  let token = req.body.id_token;
+
+  console.log("/users running");
+  const url = `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${token}`;
+
+  rp(url)
+    .then((body) => {
+      let json = JSON.parse(body);
+
+      let userExist = false;
+
+      let user = new User({
+        "email": json.email,
+        "first_name": json.given_name,
+        "last_name": json.family_name,
+      });
+
+      let image = json.picture;
+
+      // check if user exists already
+      User.find({'email': user.email}).exec((err, docs) => {
+        if (docs && docs.length) {
+          // user exists
+          req.session.user = user;
+          res.status(200).send({message: "Found user, sending back user session token"});
+        } else {
+          req.session.user = user;
+          res.status(200).send({message: "Successfully created User, sending back user session token", newlogin: true});
+          // Promise.join(user.save(), Profile.findOneAndUpdate({'username': username}, {"$set" : {'image': image}}, {'upsert': true}))
+          // .then((user, profile) => {
+          //   console.log(user);
+          //   console.log(profile);
+          //   req.session.user = user;
+          //   res.status(200).send({message: "Successfully created User, sending back user session token", newlogin: true});
+          // }).catch((e) => {
+          //   console.log(e.message);
+          //   res.status(400).send({ message: e.message });
+          // });
+        }
+      });
+
+    })
+    .catch(function (e) {
+      console.log("An error occurred", e.message);
+      res.status(400).send({message: e.message});
+    });
 });
 
-// GET /users/username
-app.get('/users/:username',(req, res) => {
-  let uname = req.params.username;
+// get user object given username
+app.get('/users/:username', (req, res) => {
+  let username = req.params.username;
 
-  User.findOne({'username': uname}, 'email username tokens').then((user) => {
+  User.findOne({ 'username': username }, 'email username first_name last_name').then((user) => {
     if (user) {
       res.status(200).send(user);
     } else {
-      res.status(404).send(`${uname} not found :(`);
+      res.status(404).send(`${username} not found :(`);
     }
   }).catch((e) => {
-    res.status(400).send({message: e.message});
+    res.status(400).send({ message: e.message });
   });
 });
 
@@ -74,9 +125,10 @@ app.get('/search', (req, res) => {
     if (recipes) {
       let response = recipes;
       res.status(200).send(response);
+    } else if (recipes.length < 1) {
+      console.log("recipe(s) not found");
+      res.status(404).send();
     }
-    if (recipes.length < 1) console.log("recipe(s) not found");
-    res.status(404).send();
   }).catch((e) => {
     res.status(400).send({message: e.message})
   });
@@ -102,22 +154,22 @@ app.post('/setProfile', (req, res) => {
   let body = _.pick(req.body, ['user', 'description', 'image']);
   console.log(body);
   // test user for valid session
-  let profile = new Profile({username: body.user.name, image: body.image, description: body.description});
+  let profile = new Profile({ username: body.user.name, image: body.image, description: body.description });
 
   profile.save().then((foo) => {
     console.log(foo);
-    res.status(200).send({message: `Successfully saved profile for ${body.user.name}`});
+    res.status(200).send({ message: `Successfully saved profile for ${body.user.name}` });
   }).catch((e) => {
     console.log(e.message);
-    res.status(400).send({message: e.message});
+    res.status(400).send({ message: e.message });
   });
 })
 
 // Get user profile
 app.get('/profile/:username', (req, res) => {
   let uname = req.params.username;
-  let recipeList = Recipe.find({'author': uname}, '_id name description');
-  let profileReq = Profile.findOne({'username': uname}, 'username image description');
+  let recipeList = Recipe.find({ 'author': uname }, '_id name description');
+  let profileReq = Profile.findOne({ 'username': uname }, 'username image description');
 
   // let promise = Promise.join(recipeList, profileReq, function(recipes, profile) {
   //   console.log(recipes, profile);
@@ -135,7 +187,7 @@ app.get('/profile/:username', (req, res) => {
   //   res.status(400).send({message: e.message});
   // })
 
-  Recipe.find({'author': uname}, '_id name description').then((recipes) => {
+  Recipe.find({ 'author': uname }, '_id name description').then((recipes) => {
     console.log(recipes);
     if (recipes) {
       let response = {
@@ -145,16 +197,17 @@ app.get('/profile/:username', (req, res) => {
       }
       console.log(response)
       res.status(200).send(response);
+    } else {
+      res.status(404).send();
     }
-    res.status(404).send();
   }).catch((e) => {
-    res.status(400).send({message: e.message})
+    res.status(400).send({ message: e.message })
   })
 })
 
 // POST /recipe
 app.post('/recipe', (req, res) => {
-  let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'ingredients', 'directions', 'tags']);
+  let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'price', 'ingredients', 'directions', 'tags', 'rating']);
   let recipe = new Recipe(body);
 
   // save recipe
@@ -175,20 +228,21 @@ app.get('/recipe/:id', (req, res) => {
   console.log('1');
 
   // if id is not valid
-  if(!ObjectID.isValid(id)) {
+  if (!ObjectID.isValid(id)) {
     console.log('2')
-    res.status(400).send({message: 'Recipe ID is invalid'}); // bad request
+    res.status(400).send({ message: 'Recipe ID is invalid' }); // bad request
     return;
   }
 
   Recipe.findById(id, (err, recipe) => {
     console.log('3');
-    if(recipe) {
+    if (recipe) {
       console.log('success!');
       res.status(200).send(recipe);
+    } else {
+      console.log('not found');
+      res.status(404).send({message: `Recipe ${id} not found`});
     }
-    console.log('not found');
-    res.status(404).send();
   }).catch((e) => {
     console.log(e);
     res.status(400).send(e);
@@ -208,7 +262,7 @@ app.get('/recipe/:id', (req, res) => {
 // PATCH /recipe/edit/:id
 app.patch('/recipe/edit/:id', (req, res) => {
   let id = req.params.id;
-  let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'ingredients', 'directions', 'tags']);
+  let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'price', 'ingredients', 'directions', 'tags', 'rating']);
 
   console.log(body);
   if(!ObjectID.isValid(id)) {
@@ -228,4 +282,4 @@ app.listen(port, () => {
   console.log(`Started up at port ${port}`);
 });
 
-module.exports = {app};
+module.exports = { app };
