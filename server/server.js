@@ -27,6 +27,7 @@ db.once('open', function () {
 app.use(bodyParser.json());
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'PATCH, POST, GET, DELETE')
   res.header("Access-Control-Allow-Headers", "Authorization, Content-Type, Access-Control-Allow-Origin, X-Requested-With");
   next();
 })
@@ -175,7 +176,7 @@ app.get('/profile/:username', (req, res) => {
     console.log(recipes);
     if (recipes) {
       let response = {
-        usename: uname,
+        username: uname,
         description: 'Test description',
         recipes: recipes
       }
@@ -259,6 +260,30 @@ app.patch('/recipe/edit/:id', (req, res) => {
     console.log("recipe updated");
   }).catch((e) => {
     res.status(e.status || 400).send(e);
+  });
+});
+
+// DELETE /recipe/delete/:id
+app.delete('/recipe/delete/:id', (req, res) => {
+  let id = req.params.id;
+  console.log(id);
+  if(!ObjectID.isValid(id)) {
+    res.status(400).send({message: 'Recipe ID is invalid'}); // bad request
+    return;
+  }
+
+  Recipe.findByIdAndRemove(id, (err, recipe) => {
+    console.log('Deleting recipe');
+    if (!err) {
+      console.log('success!');
+      res.status(200).send(recipe);
+    } else {
+      console.log('not found');
+      res.status(404).send({message: `Recipe ${id} not found`});
+    }
+  }).catch((e) => {
+    console.log(e);
+    res.status(400).send(e);
   });
 });
 
