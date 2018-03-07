@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const { ObjectID } = require('mongodb');
 const Promise = require('bluebird');
 const rp = require('request-promise');
+const session = require('client-sessions');
 
 let { mongoose } = require('./db/mongoose');
 let { User } = require('./models/user');
@@ -31,47 +32,62 @@ app.use((req, res, next) => {
   next();
 })
 
+app.use(session({
+  cookieName: 'session',
+  secret: 'random_string_goes_here',
+  duration: 30 * 60 * 1000,
+  activeDuration: 5 * 60 * 1000
+}));
+
 // POST User
 // authenticates id_token
 // creates a new user if username does not exist
 // sends back user session token
 app.post('/users', (req, res) => {
-  let token = _.pick(req.body, ['id_token']).id_token;
-  let username = _.pick(req.body, ['username']).username;
+  let token = req.body.id_token;
 
+  console.log("/users running");
   const url = `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${token}`;
 
   rp(url)
     .then((body) => {
       let json = JSON.parse(body);
-      console.log(json);
 
       let userExist = false;
 
       let user = new User({
         "email": json.email,
-        "username": username,
         "first_name": json.given_name,
         "last_name": json.family_name,
       });
 
+      let image = json.picture;
+
       // check if user exists already
-      User.find({ 'username': user.username}).exec((err, docs) => {
-        if (docs.length) {
+      User.find({'email': user.email}).exec((err, docs) => {
+        if (docs && docs.length) {
           // user exists
-          res.status(200).send("Found user, sending back user session token");
+          req.session.user = user;
+          res.status(200).send({message: "Found user, sending back user session token"});
         } else {
-          user.save().then((user) => {
-            res.status(200).send("Successfully created User, sending back user session token");
-          }).catch((e) => {
-            res.status(400).send({ message: e.message });
-          });
+          req.session.user = user;
+          res.status(200).send({message: "Successfully created User, sending back user session token", newlogin: true});
+          // Promise.join(user.save(), Profile.findOneAndUpdate({'username': username}, {"$set" : {'image': image}}, {'upsert': true}))
+          // .then((user, profile) => {
+          //   console.log(user);
+          //   console.log(profile);
+          //   req.session.user = user;
+          //   res.status(200).send({message: "Successfully created User, sending back user session token", newlogin: true});
+          // }).catch((e) => {
+          //   console.log(e.message);
+          //   res.status(400).send({ message: e.message });
+          // });
         }
       });
 
     })
     .catch(function (e) {
-      console.log("doesn't work");
+      console.log("An error occurred", e.message);
       res.status(400).send({message: e.message});
     });
 });
@@ -104,7 +120,7 @@ app.get('/search', (req, res) => {
   let tagList = setRegex(req.query.tag);
 
   // Search: { (n1 OR n2 OR ... OR nk) AND (a1 OR a2 OR ... OR ak) AND (tag1 AND tag2 AND ... AND tagk) }
-  Recipe.find({'$and': [{'name': nameList}, {'author': authorList}, {'tags.text': {'$all': tagList}}]}, '_id name author description tags').then((recipes) => {
+  Recipe.find({'$and': [{'name': nameList}, {'author': authorList}, {'tags': {'$all': tagList}}]}, '_id name author description tags').then((recipes) => {
     console.log(recipes);
     if (recipes) {
       let response = recipes;
@@ -191,7 +207,7 @@ app.get('/profile/:username', (req, res) => {
 
 // POST /recipe
 app.post('/recipe', (req, res) => {
-  let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'ingredients', 'directions', 'tags']);
+  let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'price', 'ingredients', 'directions', 'tags', 'rating']);
   let recipe = new Recipe(body);
 
   // save recipe
@@ -246,7 +262,7 @@ app.get('/recipe/:id', (req, res) => {
 // PATCH /recipe/edit/:id
 app.patch('/recipe/edit/:id', (req, res) => {
   let id = req.params.id;
-  let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'ingredients', 'directions', 'tags']);
+  let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'price', 'ingredients', 'directions', 'tags', 'rating']);
 
   console.log(body);
   if(!ObjectID.isValid(id)) {
