@@ -45,26 +45,23 @@ app.use(session({
 // sends back user session token
 app.post('/users', (req, res) => {
   let token = _.pick(req.body, ['id_token']).id_token;
-  let username = _.pick(req.body, ['username']).username;
 
   const url = `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${token}`;
 
   rp(url)
     .then((body) => {
       let json = JSON.parse(body);
-      console.log(json);
 
       let userExist = false;
 
       let user = new User({
         "email": json.email,
-        "username": username,
         "first_name": json.given_name,
         "last_name": json.family_name,
       });
 
       // check if user exists already
-      User.find({ 'username': user.username}).exec((err, docs) => {
+      User.find({ 'email': user.email}).exec((err, docs) => {
         if (docs.length) {
           // user exists
           req.session.user = user;
@@ -114,7 +111,7 @@ app.get('/search', (req, res) => {
   let tagList = setRegex(req.query.tag);
 
   // Search: { (n1 OR n2 OR ... OR nk) AND (a1 OR a2 OR ... OR ak) AND (tag1 AND tag2 AND ... AND tagk) }
-  Recipe.find({'$and': [{'name': nameList}, {'author': authorList}, {'tags.text': {'$all': tagList}}]}, '_id name author description tags').then((recipes) => {
+  Recipe.find({'$and': [{'name': nameList}, {'author': authorList}, {'tags': {'$all': tagList}}]}, '_id name author description tags').then((recipes) => {
     console.log(recipes);
     if (recipes) {
       let response = recipes;
@@ -201,7 +198,7 @@ app.get('/profile/:username', (req, res) => {
 
 // POST /recipe
 app.post('/recipe', (req, res) => {
-  let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'ingredients', 'directions', 'tags']);
+  let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'price', 'ingredients', 'directions', 'tags', 'rating']);
   let recipe = new Recipe(body);
 
   // save recipe
@@ -256,7 +253,7 @@ app.get('/recipe/:id', (req, res) => {
 // PATCH /recipe/edit/:id
 app.patch('/recipe/edit/:id', (req, res) => {
   let id = req.params.id;
-  let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'ingredients', 'directions', 'tags']);
+  let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'price', 'ingredients', 'directions', 'tags', 'rating']);
 
   console.log(body);
   if(!ObjectID.isValid(id)) {
