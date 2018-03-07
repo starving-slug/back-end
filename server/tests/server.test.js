@@ -7,6 +7,22 @@ const { User } = require('./../models/user');
 const { Profile } = require('./../models/profile');
 
 const users = [{
+<<<<<<< HEAD
+    _id: new ObjectID(),
+    email: 'kevinloi@example.com',
+    username: 'KevLoi',
+    password: 'febreezehawaiian'
+}, {
+    _id: new ObjectID(),
+    email: 'justinR@outlook.com',
+    username: 'JustinR',
+    password: 'stylingIsFun'
+}, {
+    _id: new ObjectID(),
+    email: 'shashank.guduru@gmail.com',
+    username: 'theShaGu',
+    password: '1234567'
+=======
   _id: new ObjectID(),
   email: 'test1@example.com',
   username: 'test1',
@@ -26,6 +42,7 @@ const users = [{
   username: 'test3',
   first_name: "test3",
   last_name: "baby3"
+>>>>>>> cbf3d60b038e1d37ecf0431a640d650264123a66
 }];
 
 
@@ -98,6 +115,40 @@ describe('GET /users/:username', () => {
   });
 });
 
+<<<<<<< HEAD
+
+
+// coudln't get this test to work
+// test POST profile
+// describe('POST /setProfile', () => {
+//     it('should create a profile', (done) => {
+//         // give value to params
+//         var username = 'shashank_oddessey';
+//         var image = 'helloWorld!';
+//         var description = 'Shashank is a cool kid that likes to code and cook food';
+//
+//         request(app)
+//             .post('/profile')
+//             .send({username, image, description})
+//             .expect(200)
+//             .expect((res) => {
+//                 expect(res.body.image).toBe(image);
+//                 expect(res.body.username).toBe(username);
+//                 expect(res.body.description).toBe(description);
+//             })
+//             .end((err, res) => {
+//                 if(err) {
+//                     return done(err);
+//                 }
+//
+//                 Profile.find({image}).then((profiles) => {
+//                     expect(profiles.length).toBe(1);
+//                     expect(profiles[0].image).toBe(image);
+//                 }).catch((e) => done(e));
+//             });
+//     });
+// });
+=======
 // coudln't get this test to work 
 // test POST profile
 describe('POST /setProfile', () => {
@@ -128,3 +179,4 @@ describe('POST /setProfile', () => {
       });
   });
 });
+>>>>>>> cbf3d60b038e1d37ecf0431a640d650264123a66
