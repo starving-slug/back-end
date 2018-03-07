@@ -59,7 +59,7 @@ app.get('/users/:username',(req, res) => {
 // GET /search
 app.get('/search', (req, res) => {
   // Example test:
-  // GET localhost:3000/search?author=KevLoi&tag=omega&tag=meat
+  // GET `localhost:3000/search?author=KevLoi&tag=omega&tag=meat`
   // req.query.author = KevLoi
   // req.query.tag = ['omega', 'meat']
   // returns all recipes by author KevLoi that has both tag substrings, omega and Meat
@@ -69,7 +69,7 @@ app.get('/search', (req, res) => {
   let tagList = setRegex(req.query.tag);
 
   // Search: { (n1 OR n2 OR ... OR nk) AND (a1 OR a2 OR ... OR ak) AND (tag1 AND tag2 AND ... AND tagk) }
-  Recipe.find({'$and': [{'name': nameList}, {'author': authorList}, {'tags.text': {'$all': tagList}}]}, '_id name author description tags').then((recipes) => {
+  Recipe.find({'$and': [{'name': nameList}, {'author': authorList}, {'tags': {'$all': tagList}}]}, '_id name author description photo').then((recipes) => {
     console.log(recipes);
     if (recipes) {
       let response = recipes;

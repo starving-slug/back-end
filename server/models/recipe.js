@@ -39,14 +39,8 @@ var Recipe = mongoose.model('Recipe', {
       required: true
   }],
   tags: [{
-    text: {
-      type: String,
-      required: true
-    },
-    path: {
-      type: String,
-      required: true
-    }
+    type: String,
+    required: true
   }]
 });
 
