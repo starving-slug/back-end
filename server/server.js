@@ -45,8 +45,8 @@ app.use(session({
 // sends back user session token
 app.post('/users', (req, res) => {
   let token = req.body.id_token;
-  let username = req.body.username;
 
+  console.log("/users running");
   const url = `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${token}`;
 
   rp(url)
@@ -71,16 +71,17 @@ app.post('/users', (req, res) => {
           req.session.user = user;
           res.status(200).send({message: "Found user, sending back user session token"});
         } else {
-          Promise.join(user.save(), Profile.findOneAndUpdate({'username': username}, {"$set" : {'image': image}}, {'upsert': true}))
-          .then((user, profile) => {
-            console.log(user);
-            console.log(profile);
-            req.session.user = user;
-            res.status(200).send({message: "Successfully created User, sending back user session token", newlogin: true});
-          }).catch((e) => {
-            console.log(e.message);
-            res.status(400).send({ message: e.message });
-          });
+          res.status(200).send({message: "Successfully created User, sending back user session token", newlogin: true});
+          // Promise.join(user.save(), Profile.findOneAndUpdate({'username': username}, {"$set" : {'image': image}}, {'upsert': true}))
+          // .then((user, profile) => {
+          //   console.log(user);
+          //   console.log(profile);
+          //   req.session.user = user;
+          //   res.status(200).send({message: "Successfully created User, sending back user session token", newlogin: true});
+          // }).catch((e) => {
+          //   console.log(e.message);
+          //   res.status(400).send({ message: e.message });
+          // });
         }
       });
 
