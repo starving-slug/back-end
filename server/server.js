@@ -44,8 +44,8 @@ app.use(session({
 // creates a new user if username does not exist
 // sends back user session token
 app.post('/users', (req, res) => {
-  let token = _.pick(req.body, ['id_token']).id_token;
-  let username = _.pick(req.body, ['username']).username;
+  let token = req.body.id_token;
+  let username = req.body.username;
 
   const url = `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${token}`;
 
@@ -63,17 +63,24 @@ app.post('/users', (req, res) => {
         "last_name": json.family_name,
       });
 
+      let image = json.picture;
+
       // check if user exists already
-      User.find({ 'username': user.username}).exec((err, docs) => {
-        if (docs.length) {
+      User.find({'email': user.email}).exec((err, docs) => {
+        console.log(docs);
+        if (docs && docs.length) {
           // user exists
           req.session.user = user;
-          res.status(200).send("Found user, sending back user session token");
+          res.status(200).send({message: "Found user, sending back user session token"});
         } else {
-          user.save().then((user) => {
+          Promise.join(user.save(), Profile.findOneAndUpdate({'username': username}, {"$set" : {'image': image}}, {'upsert': true}))
+          .then((user, profile) => {
+            console.log(user);
+            console.log(profile);
             req.session.user = user;
-            res.status(200).send("Successfully created User, sending back user session token");
+            res.status(200).send({message: "Successfully created User, sending back user session token", newlogin: true});
           }).catch((e) => {
+            console.log(e.message);
             res.status(400).send({ message: e.message });
           });
         }
@@ -81,7 +88,7 @@ app.post('/users', (req, res) => {
 
     })
     .catch(function (e) {
-      console.log("doesn't work");
+      console.log("An error occurred", e.message);
       res.status(400).send({message: e.message});
     });
 });
