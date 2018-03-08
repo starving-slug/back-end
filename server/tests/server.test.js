@@ -29,6 +29,29 @@ describe('POST /users', () => {
   });
 });
 
+describe('POST /recipes', () => {
+  let recipe = {
+    "name" : "Pizza Pie",
+    "author" : "Shashank Guduru",
+    "description" : "Making pizza and pie, not pizza pie",
+    "photo" : "HelloWorld!",
+    "price" : "$19.99",
+    "ingredients" : {
+      "amount" : "a lotta stuff",
+      "text" : "even more stuff"
+    },
+    "directions" : "Make the pizza... and the pie... at the same time",
+    "tags" : {
+      "text" : "Pizza pizza",
+      "path" : "pie pie"
+    }
+  }
+
+  it('should return a new recipe', () => {
+    
+  })
+})
+
 // const users = [{
 // <<<<<<< HEAD
 //     _id: new ObjectID(),
