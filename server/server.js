@@ -74,7 +74,7 @@ app.get('/search', (req, res) => {
     if (recipes) {
       let response = recipes;
       res.status(200).send(response);
-    } else if (recipes.length < 1) console.log("recipe(s) not found");
+    } else if (recipes.length < 1) {console.log("recipe(s) not found");
       res.status(404).send();
     }
   }).catch((e) => {
@@ -110,6 +110,20 @@ app.post('/setProfile', (req, res) => {
   }).catch((e) => {
     console.log(e.message);
     res.status(400).send({message: e.message});
+  });
+})
+
+// PATCH comment
+app.patch('/profile-comment/:username', (req, res) => {
+  let body = _.pick(req.body, ['comments']);
+  let uname = req.params.username;
+  console.log(body);
+  console.log(uname);
+  Profile.findOneAndUpdate({"username": uname}, {"$set" : body}).then((user) => {
+    res.status(200).send('Successfully updated comment!');
+    console.log("comment updated");
+  }).catch((e) => {
+    res.status(e.status || 400).send(e);
   });
 })
 
