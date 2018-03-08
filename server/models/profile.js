@@ -9,6 +9,10 @@ var Profile = mongoose.model('Profile', {
     unique: true,
     minlength: 1
   },
+  name: {
+    type: String,
+    require: true
+  },
   image: {
     type: String,
     require: true,
@@ -17,7 +21,7 @@ var Profile = mongoose.model('Profile', {
   description: {
     type: String,
     require: false,
-    minlength: 1,
+    minlength: 1
   }
 });
 

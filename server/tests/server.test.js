@@ -6,6 +6,46 @@ const { app } = require('./../server');
 const { User } = require('./../models/user');
 const { Profile } = require('./../models/profile');
 
+// const users = [{
+// <<<<<<< HEAD
+//     _id: new ObjectID(),
+//     email: 'kevinloi@example.com',
+//     username: 'KevLoi',
+//     password: 'febreezehawaiian'
+// }, {
+//     _id: new ObjectID(),
+//     email: 'justinR@outlook.com',
+//     username: 'JustinR',
+//     password: 'stylingIsFun'
+// }, {
+//     _id: new ObjectID(),
+//     email: 'shashank.guduru@gmail.com',
+//     username: 'theShaGu',
+//     password: '1234567'
+// =======
+//   _id: new ObjectID(),
+//   email: 'test1@example.com',
+//   username: 'test1',
+//   first_name: "test1",
+//   last_name: "baby1"
+// },
+// {
+//   _id: new ObjectID(),
+//   email: 'test2@example.com',
+//   username: 'test2',
+//   first_name: "test2",
+//   last_name: "baby2"
+// },
+// {
+//   _id: new ObjectID(),
+//   email: 'test3@example.com',
+//   username: 'test3',
+//   first_name: "test3",
+//   last_name: "baby3"
+// >>>>>>> cbf3d60b038e1d37ecf0431a640d650264123a66
+// }];
+
+// test POST users
 describe('POST /users', () => {
   let token = {
   	"id_token" : "eyJhbGciOiJSUzI1NiIsImtpZCI6ImFjMmI2M2ZhZWZjZjgzNjJmNGM1MjhlN2M3ODQzMzg3OTM4NzAxNmIifQ.eyJhenAiOiIxNjM2MjE0NzY2MjQtNTVjdXVrZTc4YzFrcm9sajhhNWZuZHA2ZXM5bnZvcHQuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIxNjM2MjE0NzY2MjQtNTVjdXVrZTc4YzFrcm9sajhhNWZuZHA2ZXM5bnZvcHQuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDE2OTM0MjY0OTI3NTU4ODA5MTAiLCJlbWFpbCI6Imoua2V2bmxvaUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiYXRfaGFzaCI6Im4xLXZOeHVNS3Y0YlRYRV81MDdrNHciLCJleHAiOjE1MjA0NTUwMTMsImlzcyI6ImFjY291bnRzLmdvb2dsZS5jb20iLCJqdGkiOiI0YjRmOWVjNjA3NDEyMzZiZTNjYzVlMGE3ODczMzFlOWM3ZDQ1ZDM0IiwiaWF0IjoxNTIwNDUxNDEzLCJuYW1lIjoiS2V2aW4gTG9pIiwicGljdHVyZSI6Imh0dHBzOi8vbGg0Lmdvb2dsZXVzZXJjb250ZW50LmNvbS8tRGpUTkxrN3BpeU0vQUFBQUFBQUFBQUkvQUFBQUFBQUFBQUEvQUdpNGdmeE1fUlA5eWQyZXRVaU16MmdYT3BjOVczb3BfUS9zOTYtYy9waG90by5qcGciLCJnaXZlbl9uYW1lIjoiS2V2aW4iLCJmYW1pbHlfbmFtZSI6IkxvaSIsImxvY2FsZSI6ImVuIn0.ELciE9ZYcD02dhLJnIvYp8_fiInYtulKZMWRGDQ5PmC4zItkeQ0OPBGBBROMRUXI7Gf0W2BEI3ZDv8GhJA3aECM7Z5AY1vfRpItJHjuyK2OWP9QrYTwEqmoJjUw__T6CnUTOVAi0WTpEipldTDQBdZ3aiVDmyp6gsA-BXUmn8KTj4gZvOTYNrKbTi6DT_64a7a9GDqfGu1-rC7wkBCUjJStIadG4RJs6qxBysUc4Q1TjyIaT_Z91kofFZeB4wPuWwAv4KLjZ-RQU02kkO6AqFryPARBvkvIwGxZ9YmP4sZHBWXKXvqe545-CNouc48L5W9CF0jeCBAKpQHWlwgwi-A"

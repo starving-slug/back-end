@@ -30,16 +30,9 @@ var User = mongoose.model('User', {
     unique: true,
     minlength: 1
   },
-  first_name: {
-    type: String,
-    required: true,
-    minlength: 1
-  },
-  last_name: {
-    type: String,
-    required: true,
-    minlength: 1
-  },
+  profile_ID: {
+    type: String
+  }
   // tokens: [{
   //   access: {
   //     type: String,
