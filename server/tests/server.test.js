@@ -38,7 +38,7 @@ beforeEach((done) => {
   Recipe.remove({}).then(() => done());
 })
 
-describe('POST /recipe', () => {
+describe('POST /recipes', () => {
   // let name = "Pizza Pie";
   // let author = "Shashank Guduru";
   // let desc = "Making pizza and pie, not pizza pie";
