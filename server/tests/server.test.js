@@ -32,11 +32,47 @@ const { Recipe } = require('./../models/recipe');
 //   });
 // });
 
+const recipes = [{
+  _id: new ObjectID(),
+  name : "Pizza Pie",
+  author : "Shashank Guduru",
+  description : "Making pizza and pie, not pizza pie",
+  photo : "HelloWorld!",
+  price : "$19.99",
+  ingredients : {
+    amount : "a lotta stuff",
+    text : "even more stuff"
+  },
+  directions : "Make the pizza... and the pie... at the same time",
+  tags : {
+    text : "Pizza pizza",
+    path : "pie pie"
+  }
+}, {
+  _id: new ObjectID(),
+  name : "Ramen",
+  author : "Kevin Loi",
+  description : "Learn how to make fancy ramen",
+  photo : "HelloWorld!",
+  price : "$10",
+  ingredients : {
+    amount : "a lotta stuff",
+    text : "even more stuff"
+  },
+  directions : "Boil water, throw everything in",
+  tags : {
+    text : "Ramen",
+    path : "Noodles"
+  }
+}]
+
 
 
 beforeEach((done) => {
-  Recipe.remove({}).then(() => done());
-})
+  Recipe.remove({}).then(() => {
+    return Recipe.insertMany(recipes);
+  }).then(() => done());
+});
 
 describe('POST /recipes', () => {
   // let name = "Pizza Pie";
@@ -84,7 +120,7 @@ describe('POST /recipes', () => {
         }
 
         Recipe.find().then((recipes) => {
-          expect(recipes.length).toBe(1);
+          expect(recipes.length).toBe(3);
           done();
         }).catch((e) => done(e));
       });
@@ -106,4 +142,39 @@ describe('POST /recipes', () => {
         }).catch((e) => done(e));
       });
   });
+});
+
+// test GET recipes by id
+describe('GET /recipes/:id', () => {
+
+  // success case
+  it('should return a recipe', (done) => {
+    request(app)
+      .get(`/recipe/${recipes[0]._id.toHexString()}`)
+      .expect(200)
+      // .expect((res) => {
+      //   expect(res.body.name).toBe(recipes[0].name);
+      // })
+      .end(done);
+  });
+
+  // fail case 1: valid id, but id is not in db
+  it('should return 404 if recipe not found', (done) => {
+    var hexID = new ObjectID().toHexString();
+
+    request(app)
+      .get(`/recipe/${hexID}`)
+      .expect(404)
+      .end(done);
+  });
+
+  // fail case 2: invalid id
+  it('should return 400 for non-object ids', (done) => {
+    // fake object id
+    request(app)
+      .get(`/recipe/123abc`)
+      .expect(400)
+      .end(done);
+  });
+
 });
