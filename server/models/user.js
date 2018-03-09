@@ -23,13 +23,6 @@ var User = mongoose.model('User', {
       message: '{VALUE} is not a valid email'
     }
   },
-  username: {
-    type: String,
-    required: true,
-    trim: true,
-    unique: true,
-    minlength: 1
-  },
   profile_ID: {
     type: String
   }

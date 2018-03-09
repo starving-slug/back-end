@@ -55,33 +55,31 @@ app.post('/users', (req, res) => {
 
       let userExist = false;
 
+      let profile = new Profile({
+        "name": json.name,
+        "image": json.picture
+      })
+
       let user = new User({
         "email": json.email,
-        "first_name": json.given_name,
-        "last_name": json.family_name,
+        "profile_ID": profile.id
       });
 
-      let image = json.picture;
-
-      // check if user exists already
+      console.log(profile, user);
+      // check if user already has an account
       User.find({'email': user.email}).exec((err, docs) => {
         if (docs && docs.length) {
-          // user exists
+          // user has an account
           req.session.user = user;
-          res.status(200).send({message: "Found user, sending back user session token"});
+          res.status(200).send({message: "Found user, sending back user session token", newLogin: false});
         } else {
-          req.session.user = user;
-          res.status(200).send({message: "Successfully created User, sending back user session token", newlogin: true});
-          // Promise.join(user.save(), Profile.findOneAndUpdate({'username': username}, {"$set" : {'image': image}}, {'upsert': true}))
-          // .then((user, profile) => {
-          //   console.log(user);
-          //   console.log(profile);
-          //   req.session.user = user;
-          //   res.status(200).send({message: "Successfully created User, sending back user session token", newlogin: true});
-          // }).catch((e) => {
-          //   console.log(e.message);
-          //   res.status(400).send({ message: e.message });
-          // });
+          Promise.join(user.save(), profile.save())
+            .then((user, profile) => {
+              res.session.user = user;
+              res.status(200).send({message: "Successfully created User, sending back user session token", newLogin: true});
+            }).catch((e) => {
+              res.status(400).send({ message: e.message });
+            });
         }
       });
 

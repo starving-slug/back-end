@@ -4,7 +4,7 @@ const validator = require('validator');
 var Profile = mongoose.model('Profile', {
   username: {
     type: String,
-    require: true,
+    require: false,
     trim: true,
     unique: true,
     minlength: 1
