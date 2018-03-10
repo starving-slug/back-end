@@ -20,8 +20,7 @@ var Profile = mongoose.model('Profile', {
   },
   description: {
     type: String,
-    require: false,
-    minlength: 1
+    require: false
   }
 });
 

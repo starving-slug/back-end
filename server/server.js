@@ -54,29 +54,22 @@ app.post('/users', (req, res) => {
     .then((body) => {
       let json = JSON.parse(body);
 
-      let userExist = false;
-
-      let profile = new Profile({
-        "name": json.name,
-        "image": json.picture
-      });
-
       let user = new User({
-        "email": json.email,
-        "profile_ID": profile.id
+        "email": json.email
       });
 
-      console.log(profile, user);
+      console.log(user.email);
       // check if user already has an account
       User.find({'email': user.email}).exec((err, docs) => {
+        console.log(docs, docs.length);
         if (docs && docs.length) {
           // user has an account
           req.session.user = user;
           res.status(200).send({message: "Found user, sending back user session token", newLogin: false});
         } else {
-          Promise.join(user.save(), profile.save())
+          Promise.join(user.save())
             .then((user, profile) => {
-              res.session.user = user;
+              req.session.user = user;
               res.status(200).send({message: "Successfully created User, sending back user session token", newLogin: true});
             }).catch((e) => {
               res.status(400).send({ message: e.message });
@@ -283,3 +276,4 @@ app.listen(port, () => {
 });
 
 module.exports = { app };
+// 
