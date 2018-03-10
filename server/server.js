@@ -133,21 +133,23 @@ app.get('/profile/:username', (req, res) => {
   let recipeList = Recipe.find({'author': uname}, '_id name description');
   let profileReq = Profile.findOne({'username': uname}, 'username image description');
 
-  // let promise = Promise.join(recipeList, profileReq, function(recipes, profile) {
-  //   console.log(recipes, profile);
-  //   if (recipes && profile) {
-  //     let response = {
-  //       username: profile.username,
-  //       description: profile.description,
-  //       image: profile.image,
-  //       recipes: recipes
-  //     }
-  //     res.status(200).send(response);
-  //   }
-  //   res.status(404).send();
-  // }).catch((e) => {
-  //   res.status(400).send({message: e.message});
-  // })
+   let promise = Promise.join(recipeList, profileReq, function(recipes, profile) {
+     console.log(recipes, profile);
+     if (profile) {
+      let response = {
+       username: profile.username,
+         description: profile.description,
+         image: profile.image,
+         recipes: recipes || []
+         comments: profile.comments
+       }
+       res.status(200).send(response);
+     } else {
+       res.status(404).send();       
+     }
+   }).catch((e) => {
+     res.status(400).send({message: e.message});
+   })
 
   Recipe.find({'author': uname}, '_id name description').then((recipes) => {
     console.log(recipes);
