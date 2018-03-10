@@ -140,7 +140,7 @@ app.get('/profile/:username', (req, res) => {
        username: profile.username,
          description: profile.description,
          image: profile.image,
-         recipes: recipes || []
+         recipes: recipes || [],
          comments: profile.comments
        }
        res.status(200).send(response);
