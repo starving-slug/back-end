@@ -44,6 +44,7 @@ app.use(session({
 // creates a new user if username does not exist
 // sends back user session token
 app.post('/users', (req, res) => {
+  console.log(req.body);
   let token = req.body.id_token;
 
   console.log("/users running");
@@ -58,7 +59,7 @@ app.post('/users', (req, res) => {
       let profile = new Profile({
         "name": json.name,
         "image": json.picture
-      })
+      });
 
       let user = new User({
         "email": json.email,
