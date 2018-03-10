@@ -55,20 +55,26 @@ app.post('/users', (req, res) => {
     .then((body) => {
       let json = JSON.parse(body);
 
-      let user = new User({
+      let user = {
         "email": json.email
-      });
+      };
 
       // check if user already has an account
       Profile.find({'email': user.email}).exec((err, docs) => {
         if (docs && docs.length) {
           // user has an account
           console.log('this user account already exists');
-          req.session.user = user;
-          res.status(200).send({message: "Found user, sending back user session token", newLogin: false});
+          User.findOne({'email': user.email}).then((db_user) => {
+            if (db_user) {
+              req.session.user = db_user;
+              res.status(200).send({message: "Found user, sending back user session token", newLogin: false});
+            } else {
+              res.status(500).send({message: "Error: Profile exists for nonexistant user " + user.email});
+            }
+          })
         } else {
           console.log('This user account does not yet exist, prompt for profile creation');
-          user.save()
+          User.findOneAndUpdate({"email": user.email}, {"$set" : user}, {'upsert': true})
             .then((user) => {
               req.session.user = user;
               res.status(200).send({message: "Successfully created User, sending back user session token", newLogin: true});
