@@ -131,13 +131,13 @@ app.patch('/profile-comment/:username', (req, res) => {
 app.get('/profile/:username', (req, res) => {
   let uname = req.params.username;
   let recipeList = Recipe.find({'author': uname}, '_id name description');
-  let profileReq = Profile.findOne({'username': uname}, 'username image description');
+  let profileReq = Profile.findOne({'username': uname}, 'username image description comments');
 
    let promise = Promise.join(recipeList, profileReq, function(recipes, profile) {
-     console.log(recipes, profile);
      if (profile) {
+      console.log(profile);
       let response = {
-       username: profile.username,
+         username: profile.username,
          description: profile.description,
          image: profile.image,
          recipes: recipes || [],
@@ -150,23 +150,6 @@ app.get('/profile/:username', (req, res) => {
    }).catch((e) => {
      res.status(400).send({message: e.message});
    })
-
-  Recipe.find({'author': uname}, '_id name description').then((recipes) => {
-    console.log(recipes);
-    if (recipes) {
-      let response = {
-        usename: uname,
-        description: 'Test description',
-        recipes: recipes
-      }
-      console.log(response)
-      res.status(200).send(response);
-    } else {
-      res.status(404).send();
-    }
-  }).catch((e) => {
-    res.status(400).send({message: e.message})
-  })
 })
 
 // POST /recipe
