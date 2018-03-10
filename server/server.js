@@ -154,9 +154,10 @@ app.post('/setProfile', (req, res) => {
   // test user for valid session
   let profile = new Profile({ username: body.user.name, image: body.image, description: body.description });
 
-  profile.save().then((foo) => {
-    console.log(foo);
+  profile.save().then((profile) => {
+    console.log(profile);
     res.status(200).send({ message: `Successfully saved profile for ${body.user.name}` });
+    console.log('profile saved');
   }).catch((e) => {
     console.log(e.message);
     res.status(400).send({ message: e.message });

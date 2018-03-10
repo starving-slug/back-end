@@ -11,7 +11,7 @@ const { Recipe } = require('./../models/recipe');
 // works properly, just need to update the token before running it
 // describe('POST /users', () => {
 //   let token = {
-//   	"id_token" : "eyJhbGciOiJSUzI1NiIsImtpZCI6ImFjMmI2M2ZhZWZjZjgzNjJmNGM1MjhlN2M3ODQzMzg3OTM4NzAxNmIifQ.eyJhenAiOiIxNjM2MjE0NzY2MjQtNTVjdXVrZTc4YzFrcm9sajhhNWZuZHA2ZXM5bnZvcHQuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIxNjM2MjE0NzY2MjQtNTVjdXVrZTc4YzFrcm9sajhhNWZuZHA2ZXM5bnZvcHQuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDE2OTM0MjY0OTI3NTU4ODA5MTAiLCJlbWFpbCI6Imoua2V2bmxvaUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiYXRfaGFzaCI6IjRqTFhJUEpUTUJmbFlQNnVYNjUzekEiLCJleHAiOjE1MjA0OTU2OTgsImlzcyI6ImFjY291bnRzLmdvb2dsZS5jb20iLCJqdGkiOiI0N2I0NGQ1YWE1MWI0ODhkZWM3MWNkNTUzMTg5ZjU1YWJlZGI5OGQxIiwiaWF0IjoxNTIwNDkyMDk4LCJuYW1lIjoiS2V2aW4gTG9pIiwicGljdHVyZSI6Imh0dHBzOi8vbGg0Lmdvb2dsZXVzZXJjb250ZW50LmNvbS8tRGpUTkxrN3BpeU0vQUFBQUFBQUFBQUkvQUFBQUFBQUFBQUEvQUdpNGdmeE1fUlA5eWQyZXRVaU16MmdYT3BjOVczb3BfUS9zOTYtYy9waG90by5qcGciLCJnaXZlbl9uYW1lIjoiS2V2aW4iLCJmYW1pbHlfbmFtZSI6IkxvaSIsImxvY2FsZSI6ImVuIn0.WyGCsOBkJnjtDjOlDUMoSbiZRphVKcWswj8vdXo7ohG_UvDfPKKpOz8r-W0iBNbas309Z-oipibDBMK2iFsemgU3DRKN2hpNqB9C5QnvJo8d5fElETqCSW9Cm9xJmeQebwcvy1pDmC7Plzkznsq5KhJ7lEQOwdnbG9Ji-C9whpykpByMlKZOvtK5apFDgGEUZwEMFhvHzDmU21sju3q8Ni4B2nrpyccLuhqx3xdaeE7G-A9Tf5s1jw78E_M8oOmrsfC2tbVP6_FMWPcx_54tekm0Tvsd7x1e_95OTukEPNmIS-Gvto5Jjec5UU7C1h4fPDNGon4A8HyAkZtSrxbveg"
+//   	"id_token" : "eyJhbGciOiJSUzI1NiIsImtpZCI6ImFjMmI2M2ZhZWZjZjgzNjJmNGM1MjhlN2M3ODQzMzg3OTM4NzAxNmIifQ.eyJhenAiOiIxNjM2MjE0NzY2MjQtNTVjdXVrZTc4YzFrcm9sajhhNWZuZHA2ZXM5bnZvcHQuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIxNjM2MjE0NzY2MjQtNTVjdXVrZTc4YzFrcm9sajhhNWZuZHA2ZXM5bnZvcHQuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDQxOTE2OTE3MjI4MjE1MTU4MDQiLCJoZCI6InVjc2MuZWR1IiwiZW1haWwiOiJrbG9pQHVjc2MuZWR1IiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImF0X2hhc2giOiJJenF5dXZ3OUZBWnFRZVRTdXoteU9RIiwiZXhwIjoxNTIwNjQ5NzYzLCJpc3MiOiJhY2NvdW50cy5nb29nbGUuY29tIiwianRpIjoiZWQ0MmU4N2ExODg1OTU3ZjdiMTM4OWJhMjFhMDE2NjI0YWM4NmIyNiIsImlhdCI6MTUyMDY0NjE2MywibmFtZSI6IktldmluIExvaSIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vLWM4VmJiMVRBb0RZL0FBQUFBQUFBQUFJL0FBQUFBQUFBQUFBL0FHaTRnZndaYnlZUXljRTJvX1lEVDNDbHM5TF96dEowVUEvczk2LWMvcGhvdG8uanBnIiwiZ2l2ZW5fbmFtZSI6IktldmluIiwiZmFtaWx5X25hbWUiOiJMb2kiLCJsb2NhbGUiOiJlbiJ9.gJi0ybEzGfu7bgQwiCSH65kPtbAGZp_S9zbuGAhHWgGH4F5k56LY39HJf3jawb3zD5M-v9LDTDKfUMQAHa-FJmOdDnRhpCu9Zqh6mrCUJPz6GPrbkkFy0Pw0CfEP5ZZAUio-vbmSJ-TT2QrbVcb74ro0OZ9bV_lKeJ2SD2bhWUrq-oMBZouh77_QdG__g5YWE99Ax0lIDZKrkahclRewBgdv0gWlBgI8ppSjnv0UVAId6uUAedtHnd2wMZ6qVVwy2cmPiDfR68hxfp_3DPlZhdfPQekdRZA9o35c-ezN_Gl0DiOqKMWOyzbNHTXpBwxT2DK1l30Sapq7RXWbLHCjmw"
 //   }
 //
 //   it('should return user session', (done) => {
@@ -26,11 +26,47 @@ const { Recipe } = require('./../models/recipe');
 //         if (err) {
 //           return done(err);
 //         } else {
-//           done();
+//           return done();
 //         }
 //       });
 //   });
 // });
+
+beforeEach((done) => {
+  Profile.remove({}).then(() => done());
+})
+
+// test setProfile
+// profile does not save in profile database for some reason
+describe('POST /profiles', () => {
+
+  // success cases
+  it('should create a new profile', (done) => {
+
+    // creates new profile
+    let newProfile = {
+      user : 'Danny Boyd',
+      description : 'Angular Master',
+      image : 'Hello World!'
+    }
+
+    request(app)
+      .post('/setProfile')
+      .send(newProfile)
+      .expect(200)
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+
+        Profile.find({newProfile}).then((profiles) => {
+          expect(profiles.length).toBe(1);
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+});
+
 
 const recipes = [{
   _id: new ObjectID(),
@@ -74,6 +110,7 @@ beforeEach((done) => {
   }).then(() => done());
 });
 
+// works fine
 describe('POST /recipes', () => {
   // let name = "Pizza Pie";
   // let author = "Shashank Guduru";
@@ -144,6 +181,7 @@ describe('POST /recipes', () => {
   });
 });
 
+// works fine
 // test GET recipes by id
 describe('GET /recipes/:id', () => {
 
@@ -175,6 +213,31 @@ describe('GET /recipes/:id', () => {
       .get(`/recipe/123abc`)
       .expect(400)
       .end(done);
+  });
+
+});
+
+// works fine
+// test PATCH recipes by id
+describe('PATCH /recipes/edit/:id', () => {
+
+  // success case
+  it('should update recipe', (done) => {
+    var name = 'Pizza Pie';
+    var author = 'Karen Lee';
+    var hexID = recipes[0]._id.toHexString();
+
+    request(app)
+      .patch(`/recipe/edit/${hexID}`)
+      .send({
+        name,
+        author
+      })
+      // .expect((res) => {
+      //   expect(res.body.name).toBe(name);
+      // })
+      .expect(200)
+      .end(done)
   });
 
 });
