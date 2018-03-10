@@ -59,20 +59,21 @@ app.post('/users', (req, res) => {
         "email": json.email
       });
 
-      console.log(user.email);
       // check if user already has an account
-      User.find({'email': user.email}).exec((err, docs) => {
-        console.log(docs, docs.length);
+      Profile.find({'email': user.email}).exec((err, docs) => {
         if (docs && docs.length) {
           // user has an account
+          console.log('this user account already exists');
           req.session.user = user;
           res.status(200).send({message: "Found user, sending back user session token", newLogin: false});
         } else {
-          Promise.join(user.save())
-            .then((user, profile) => {
+          console.log('This user account does not yet exist, prompt for profile creation');
+          user.save()
+            .then((user) => {
               req.session.user = user;
               res.status(200).send({message: "Successfully created User, sending back user session token", newLogin: true});
             }).catch((e) => {
+              console.log(e.message);
               res.status(400).send({ message: e.message });
             });
         }
@@ -144,10 +145,10 @@ function setRegex(list) {
 
 // POST profile
 app.post('/setProfile', (req, res) => {
-  let body = _.pick(req.body, ['user', 'description', 'image']);
+  let body = _.pick(req.body, ['user', 'email', 'description', 'image']);
   console.log(body);
   // test user for valid session
-  let profile = new Profile({ username: body.user.name, image: body.image, description: body.description });
+  let profile = new Profile({ username: body.user.name, email: body.email, image: body.image, description: body.description });
 
   profile.save().then((profile) => {
     console.log(profile);
@@ -164,22 +165,6 @@ app.get('/profile/:username', (req, res) => {
   let uname = req.params.username;
   let recipeList = Recipe.find({ 'author': uname }, '_id name description');
   let profileReq = Profile.findOne({ 'username': uname }, 'username image description');
-
-  // let promise = Promise.join(recipeList, profileReq, function(recipes, profile) {
-  //   console.log(recipes, profile);
-  //   if (recipes && profile) {
-  //     let response = {
-  //       username: profile.username,
-  //       description: profile.description,
-  //       image: profile.image,
-  //       recipes: recipes
-  //     }
-  //     res.status(200).send(response);
-  //   }
-  //   res.status(404).send();
-  // }).catch((e) => {
-  //   res.status(400).send({message: e.message});
-  // })
 
   Recipe.find({ 'author': uname }, '_id name description').then((recipes) => {
     console.log(recipes);
@@ -241,16 +226,6 @@ app.get('/recipe/:id', (req, res) => {
     console.log(e);
     res.status(400).send(e);
   });
-
-  // // find recipe by ID
-  // Recipe.findById(id).then((recipe) => {
-  //   if(recipe) {
-  //     res.send(200).send(recipe);
-  //   }
-  //   res.status(404).send();
-  // }).catch((e) => {
-  //   res.status(400).send(e);
-  // });
 })
 
 // PATCH /recipe/edit/:id
@@ -301,4 +276,4 @@ app.listen(port, () => {
 });
 
 module.exports = { app };
-// 
+//
