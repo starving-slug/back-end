@@ -26,16 +26,6 @@ var User = mongoose.model('User', {
   profile_ID: {
     type: String
   }
-  // tokens: [{
-  //   access: {
-  //     type: String,
-  //     required: true
-  //   },
-  //   token: {
-  //     type: String,
-  //     required: true
-  //   }
-  // }]
 });
 
 module.exports = {User}

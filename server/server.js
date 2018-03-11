@@ -54,7 +54,7 @@ app.post('/users', (req, res) => {
   rp(url)
     .then((body) => {
       let json = JSON.parse(body);
-
+      console.log(json);
       let user = new User({
         "email": json.email
       });
@@ -68,18 +68,16 @@ app.post('/users', (req, res) => {
           req.session.user = user;
           res.status(200).send({message: "Found user, sending back user session token", newLogin: false});
         } else {
-          Promise.join(user.save())
-            .then((user, profile) => {
-              req.session.user = user;
-              res.status(200).send({message: "Successfully created User, sending back user session token", newLogin: true});
-            }).catch((e) => {
-              res.status(400).send({ message: e.message });
-            });
+          user.save().then((user) => {
+            req.session.user = user;
+            res.status(200).send({message: "Successfully created User, sending back user session token", newLogin: true});
+          }).catch((e) => {
+            res.status(400).send({ message: e.message });
+          });
         }
       });
 
-    })
-    .catch(function (e) {
+    }).catch(function (e) {
       console.log("An error occurred", e.message);
       res.status(400).send({message: e.message});
     });
@@ -144,19 +142,53 @@ function setRegex(list) {
 
 // POST profile
 app.post('/setProfile', (req, res) => {
-  let body = _.pick(req.body, ['user', 'description', 'image']);
-  console.log(body);
-  // test user for valid session
-  let profile = new Profile({ username: body.user.name, image: body.image, description: body.description });
+  // check if user session exists and is valid
+  if (req.session && req.session.user) {
+    User.findOne({ email: req.session.user.email }, function (err, user) {
+      if (!user) {
+        // if the user isn't found in the DB, reset the session info and
+        // redirect the user to the login page
+        req.session.reset();
+        res.redirect('/');
+      } else {
+        // create profile 
+        let body = _.pick(req.body, ['email', 'username', 'name', 'image', 'description']);
 
-  profile.save().then((profile) => {
-    console.log(profile);
-    res.status(200).send({ message: `Successfully saved profile for ${body.user.name}` });
-    console.log('profile saved');
-  }).catch((e) => {
-    console.log(e.message);
-    res.status(400).send({ message: e.message });
-  });
+        let profile = new Profile({ 
+          email: body.email,
+          username: body.username,
+          image: body.image, 
+          description: body.description 
+        });
+
+        User.findOneAndUpdate( { email: req.session.user.email }, { $set: { profile_ID: profile.id } }, (err, doc) => {
+          if(err){
+            console.log("Something wrong when updating data!");
+            res.status(400).send("User could not be found");
+          }
+          console.log(doc);
+        })
+        // .catch((e) => {
+        //   res.status(400).send({ message: e.message });
+        // });
+
+        profile.save().then((profile) => {
+          console.log(profile);
+
+          // update session to hold the newly added profile_ID
+          req.session.user = user;
+          res.status(200).send({ message: `Successfully saved profile for ${body.email}` });
+          console.log('profile saved');
+        }).catch((e) => {
+          console.log(e.message);
+          res.status(400).send({ message: e.message });
+        });
+      }
+    });
+  } else {
+    // if user session does not exit or is not valid. then redirect to login (home page in this case)
+    res.redirect('/');
+  }
 })
 
 // Get user profile
