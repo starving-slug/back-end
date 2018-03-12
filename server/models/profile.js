@@ -28,8 +28,14 @@ var Profile = mongoose.model('Profile', {
     minlength: 6
   },
   description: {
-    type: String
-  }
+    type: String,
+    require: false,
+    minlength: 1,
+  },
+  bookmarks: [{
+    type: String,
+    required: true,
+  }]
 });
 
 module.exports = {Profile}

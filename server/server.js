@@ -181,6 +181,48 @@ function setRegex(list) {
   return listReg;
 }
 
+app.post('/bookmark/:id', (req, res) => {
+  console.log(req.params)
+  let recipe_id = req.params.id;
+  let body = _.pick(req.body, ['username']);
+  Recipe.findOne({"_id": ObjectID(recipe_id)}, 'name').then((recipe) => {
+    console.log(recipe);
+
+    let query = {username: body.username};
+    let update = {bookmarks: [recipe_id]};
+
+    console.log(update);
+    Profile.findOneAndUpdate(query, {"$push" : update}).then((profile) => {
+      console.log(profile);
+      res.status(200).send({message: `Successfully bookmarked recipe id ${recipe_id}`});
+    });
+  }).catch((e) => {
+    console.log(e.message);
+    res.status(e.status || 500).send({message: e.message || "There was an error bookmarking " + recipe_id});
+  })
+})
+
+app.post('/unbookmark/:id', (req, res) => {
+  console.log(req.params)
+  let recipe_id = req.params.id;
+  let body = _.pick(req.body, ['username']);
+  Recipe.findOne({"_id": ObjectID(recipe_id)}, 'name').then((recipe) => {
+    console.log(recipe);
+
+    let query = {username: body.username};
+    let update = {bookmarks: [recipe_id]};
+
+    console.log(update);
+    Profile.findOneAndUpdate(query, {"$pull" : update}).then((profile) => {
+      console.log(profile);
+      res.status(200).send({message: `Successfully bookmarked recipe id ${recipe_id}`});
+    });
+  }).catch((e) => {
+    console.log(e.message);
+    res.status(e.status || 500).send({message: e.message || "There was an error bookmarking " + recipe_id});
+  })
+})
+
 // POST profile
 app.post('/setProfile', (req, res) => {
   let token = req.headers.token;
@@ -224,95 +266,31 @@ app.post('/setProfile', (req, res) => {
       res.status(400).send({message: e.message});
     })
   }
-
-  // if (req.session && req.session.user) {
-  //   User.findOne({ email: req.session.user.email }, function (err, user) {
-  //     if (!user) {
-  //       // if the user isn't found in the DB, reset the session info and
-  //       // redirect the user to the login page
-  //       req.session.reset();
-  //       res.redirect('/');
-  //     } else {
-  //       // create profile 
-  //       let body = _.pick(req.body, ['email', 'username', 'name', 'image', 'description']);
-
-  // if (req.session && req.session.user) {
-  //   User.findOne({ email: req.session.user.email }, function (err, user) {
-  //     if (!user) {
-  //       // if the user isn't found in the DB, reset the session info and
-  //       // redirect the user to the login page
-  //       req.session.reset();
-  //       res.redirect('/');
-  //     } else {
-  //       // create profile 
-  //       let body = _.pick(req.body, ['email', 'username', 'name', 'image', 'description']);
-
-  // if (req.session && req.session.user) {
-  //   User.findOne({ email: req.session.user.email }, function (err, user) {
-  //     if (!user) {
-  //       // if the user isn't found in the DB, reset the session info and
-  //       // redirect the user to the login page
-  //       req.session.reset();
-  //       res.redirect('/');
-  //     } else {
-  //       // create profile 
-  //       let body = _.pick(req.body, ['email', 'username', 'name', 'image', 'description']);
-
-  //       let profile = new Profile({ 
-  //         email: body.email,
-  //         username: body.username,
-  //         image: body.image, 
-  //         description: body.description 
-  //       });
-
-  //       User.findOneAndUpdate( { email: req.session.user.email }, { $set: { profile_ID: profile.id } }, (err, doc) => {
-  //         if(err){
-  //           console.log("Something wrong when updating data!");
-  //           res.status(400).send("User could not be found");
-  //         }
-  //         console.log(doc);
-  //       })
-        
-  //       profile.save().then((profile) => {
-  //         console.log(profile);
-
-  //         // update session to hold the newly added profile_ID
-  //         req.session.user = user;
-  //         res.status(200).send({ message: `Successfully saved profile for ${body.email}` });
-  //         console.log('profile saved');
-  //       }).catch((e) => {
-  //         console.log(e.message);
-  //         res.status(400).send({ message: e.message });
-  //       });
-  //     }
-  //   });
-  // } else {
-  //   // if user session does not exit or is not valid. then redirect to login (home page in this case)
-  //   res.status(400).send({  });
-  // }
 })
 
 // Get user profile
 app.get('/profile/:username', (req, res) => {
   let uname = req.params.username;
-  let recipeList = Recipe.find({ 'author': uname }, '_id name description');
-  let profileReq = Profile.findOne({ 'username': uname }, 'username image description');
+  let recipeList = Recipe.find({'author': uname}, '_id name description');
+  let profileReq = Profile.findOne({'username': uname}, 'username image description bookmarks');
 
-  Recipe.find({ 'author': uname }, '_id name description').then((recipes) => {
-    console.log(recipes);
-    if (recipes) {
+
+  let promise = Promise.join(recipeList, profileReq, (recipes, profile) => {
+    console.log(recipes, profile);
+    if (profile) {
       let response = {
-        username: uname,
-        description: 'Test description',
-        recipes: recipes
+        username: profile.username,
+        image: profile.image,
+        description: profile.description,
+        bookmarks: profile.bookmarks,
+        recipes: recipes || []
       }
-      console.log(response)
       res.status(200).send(response);
     } else {
-      res.status(404).send();
+      res.status(404).send({message: `Missing profile info for ${uname}`});
     }
   }).catch((e) => {
-    res.status(400).send({ message: e.message })
+    res.status(400).send({message: e.message});
   })
 })
 
