@@ -34,35 +34,34 @@ const { Recipe } = require('./../models/recipe');
 
 beforeEach((done) => {
   Profile.remove({}).then(() => done());
-})
+});
 
 // test setProfile
 // profile does not save in profile database for some reason
 describe('POST /profiles', () => {
 
-  // success cases
-  it('should create a new profile', (done) => {
+  // user session does not exist, redirect to login (302)
+  it('should try to create a new profile, but redirect to login', (done) => {
 
     // creates new profile
-    let newProfile = {
-      user : 'Danny Boyd',
+    let profile = {
+      email : 'dannyboyd@example.com',
+      username : 'DannyBoydAngular',
+      name: 'Danny Boyd',
       description : 'Angular Master',
       image : 'Hello World!'
     }
 
     request(app)
       .post('/setProfile')
-      .send(newProfile)
-      .expect(200)
+      .send(profile)
+      .expect(302)
       .end((err) => {
         if (err) {
           return done(err);
+        } else {
+          return done();
         }
-
-        Profile.find({newProfile}).then((profiles) => {
-          expect(profiles.length).toBe(1);
-          done();
-        }).catch((e) => done(e));
       });
   });
 });
@@ -80,9 +79,10 @@ const recipes = [{
     text : "even more stuff"
   },
   directions : "Make the pizza... and the pie... at the same time",
-  tags : {
-    text : "Pizza pizza",
-    path : "pie pie"
+  tags : "Pizza",
+  comments : {
+    comment : "Pizza Pie tastes delicious",
+    author : "Shashank Guduru"
   }
 }, {
   _id: new ObjectID(),
@@ -96,9 +96,10 @@ const recipes = [{
     text : "even more stuff"
   },
   directions : "Boil water, throw everything in",
-  tags : {
-    text : "Ramen",
-    path : "Noodles"
+  tags : "Ramen",
+  comments : {
+    comment : "Ramen is amazing, always",
+    author : "Kevin Loi"
   }
 }]
 
@@ -137,9 +138,10 @@ describe('POST /recipes', () => {
       text : "even more stuff"
     },
     directions : "Make the pizza... and the pie... at the same time",
-    tags : {
-      text : "Pizza pizza",
-      path : "pie pie"
+    tags : "Pizza",
+    comments : {
+      comment : "Pizza Pizza",
+      author : "Shashank Guduru"
     }
   }
 
