@@ -238,6 +238,25 @@ app.get('/profile/:username', (req, res) => {
   })
 })
 
+// PATCH /rating
+app.patch('/rating/:id', (req, res) => {
+  let id = req.params.id;
+  let body = req.body;
+
+  console.log(body);
+  if(!ObjectID.isValid(id)) {
+    res.status(400).send({message: 'Recipe ID is invalid'}); // bad request
+    return;
+  }
+
+  Recipe.findOneAndUpdate({"_id": ObjectID(id)}, {"$set" : {rating: body}}).then((recipe) => {
+    res.status(200).send('Successfully updated ratings!');
+    console.log("rating updated");
+  }).catch((e) => {
+    res.status(e.status || 400).send(e);
+  });
+});
+
 // POST /recipe
 app.post('/recipe', (req, res) => {
   let body = _.pick(req.body, ['name', 'author', 'description', 'photo', 'price', 'ingredients', 'directions', 'tags', 'rating']);

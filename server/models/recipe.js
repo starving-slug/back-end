@@ -29,8 +29,16 @@ var Recipe = mongoose.model('Recipe', {
     required: false
   },
   rating: {
-    type: Number,
-    required: false
+    average: {
+      type: Number,
+      required: false,
+      default: 0
+    },
+    quantity: {
+      type: Number,
+      required: false,
+      default: 0
+    }
   },
   ingredients: [{
     amount: {
