@@ -38,7 +38,7 @@ app.use((req, res, next) => {
 // authenticates id_token
 // creates a new user if username does not exist
 // sends back user session token as a cookie with set-cookie
-app.post('/user', (req, res) => {
+app.post('/users', (req, res) => {
   let token = req.body.id_token;
 
   console.log("/user running");
