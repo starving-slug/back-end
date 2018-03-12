@@ -28,8 +28,21 @@ var Profile = mongoose.model('Profile', {
     minlength: 6
   },
   description: {
-    type: String
-  }
+    type: String,
+    require: false,
+    minlength: 1,
+  },
+   comments: [{
+    comment: {
+      type: String
+    },
+    author: {
+      type: String
+    },
+    post: {
+      type: String
+    }
+  }]
 });
 
 module.exports = {Profile}

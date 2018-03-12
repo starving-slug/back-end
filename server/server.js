@@ -28,7 +28,7 @@ db.once('open', function () {
 app.use(bodyParser.json());
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'PATCH, POST, GET, DELETE')
+  res.header('Access-Control-Allow-Methods', 'PATCH, POST, GET, DELETE');
   res.header("Access-Control-Allow-Headers", "Authorization, Content-Type, Access-Control-Allow-Origin, X-Requested-With");
   next();
 })
@@ -123,8 +123,7 @@ app.get('/search', (req, res) => {
     if (recipes) {
       let response = recipes;
       res.status(200).send(response);
-    } else if (recipes.length < 1) {
-      console.log("recipe(s) not found");
+    } else if (recipes.length < 1) {console.log("recipe(s) not found");
       res.status(404).send();
     }
   }).catch((e) => {
@@ -198,44 +197,46 @@ app.post('/users/setProfile', (req, res) => {
   }
 })
 
+// PATCH comment
+app.patch('/profile-comment/:username', (req, res) => {
+  let body = req.body;
+  let uname = req.params.username;
+  console.log(body);
+  console.log(uname);
+
+  Profile.findOneAndUpdate({"username": uname}, {"$set" : {comments: body}}).then((user) => {
+    res.status(200).send('Successfully updated profile!');
+    console.log("comments updated");
+  }).catch((e) => {
+    res.status(e.status || 400).send(e);
+  });
+
+});
+
 // Get user profile
 app.get('/profile/:username', (req, res) => {
   let uname = req.params.username;
-  let recipeList = Recipe.find({ 'author': uname }, '_id name description');
-  let profileReq = Profile.findOne({ 'username': uname }, 'username image description');
 
-  // let promise = Promise.join(recipeList, profileReq, function(recipes, profile) {
-  //   console.log(recipes, profile);
-  //   if (recipes && profile) {
-  //     let response = {
-  //       username: profile.username,
-  //       description: profile.description,
-  //       image: profile.image,
-  //       recipes: recipes
-  //     }
-  //     res.status(200).send(response);
-  //   }
-  //   res.status(404).send();
-  // }).catch((e) => {
-  //   res.status(400).send({message: e.message});
-  // })
+  let recipeList = Recipe.find({'author': uname}, '_id name description');
+  let profileReq = Profile.findOne({'username': uname}, 'username image description comments');
 
-  Recipe.find({ 'author': uname }, '_id name description').then((recipes) => {
-    console.log(recipes);
-    if (recipes) {
+   let promise = Promise.join(recipeList, profileReq, function(recipes, profile) {
+     if (profile) {
+      console.log(profile);
       let response = {
-        username: uname,
-        description: 'Test description',
-        recipes: recipes
-      }
-      console.log(response)
-      res.status(200).send(response);
-    } else {
-      res.status(404).send();
-    }
-  }).catch((e) => {
-    res.status(400).send({ message: e.message })
-  })
+         username: profile.username,
+         description: profile.description,
+         image: profile.image,
+         recipes: recipes || [],
+         comments: profile.comments
+       }
+       res.status(200).send(response);
+     } else {
+       res.status(404).send();       
+     }
+   }).catch((e) => {
+     res.status(400).send({message: e.message});
+   })
 })
 
 // POST /recipe
