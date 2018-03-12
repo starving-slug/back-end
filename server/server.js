@@ -25,6 +25,7 @@ db.once('open', function() {
 app.use(bodyParser.json());
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'PATCH, POST, GET, DELETE');
   res.header("Access-Control-Allow-Headers", "Authorization, Content-Type, Access-Control-Allow-Origin, X-Requested-With");
   next();
 })
@@ -115,17 +116,19 @@ app.post('/setProfile', (req, res) => {
 
 // PATCH comment
 app.patch('/profile-comment/:username', (req, res) => {
-  let body = _.pick(req.body, ['comments']);
+  let body = req.body;
   let uname = req.params.username;
   console.log(body);
   console.log(uname);
-  Profile.findOneAndUpdate({"username": uname}, {"$set" : body}).then((user) => {
-    res.status(200).send('Successfully updated comment!');
-    console.log("comment updated");
+
+  Profile.findOneAndUpdate({"username": uname}, {"$set" : {comments: body}}).then((user) => {
+    res.status(200).send('Successfully updated profile!');
+    console.log("comments updated");
   }).catch((e) => {
     res.status(e.status || 400).send(e);
   });
-})
+
+});
 
 // Get user profile
 app.get('/profile/:username', (req, res) => {
