@@ -30,7 +30,7 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', 'http://localhost:4200');
   res.header("Access-Control-Allow-Credentials", "true")
   res.header('Access-Control-Allow-Methods', 'PATCH, POST, GET, DELETE')
-  res.header("Access-Control-Allow-Headers", "Authorization, Content-Type, Access-Control-Allow-Origin, X-Requested-With");
+  res.header("Access-Control-Allow-Headers", "Authorization, Content-Type, Access-Control-Allow-Origin, X-Requested-With, token");
   next();
 })
 
@@ -78,11 +78,11 @@ app.post('/users', (req, res) => {
                   console.log("Something wrong when updating token!");
               }
             });
-            
+
             res.status(200).send({message: "Found user, sending back user session token", newLogin: false, token: token});
           } else {
             // user created but no profile exists
-            
+
             // create token
             let token = jwt.sign(payload, "asdwerbldsfiuawer", {
               expiresIn: 1440 // expires in 24 hours
@@ -132,7 +132,7 @@ app.get('/users/:username', (req, res) => {
     if (user) {
       res.status(200).send(user);
     } else {
-      res.status(404).send(`${username} not found :(`);
+      res.status(404).send({message: `${username} not found :(`});
     }
   }).catch((e) => {
     res.status(400).send({ message: e.message });
@@ -224,13 +224,14 @@ app.post('/unbookmark/:id', (req, res) => {
 
 // POST profile
 app.post('/setProfile', (req, res) => {
+  console.log('Running setProfile');
   let token = req.headers.token;
   let profile = req.body;
 
   // check if user session exists and is valid
   if (token) {
     User.find({'token': token}).exec((err, docs) => {
-      // save profile or whatever else 
+      // save profile or whatever else
       if (docs && docs.length) {
 
         if (!docs[0].profile_ID) {
@@ -275,7 +276,7 @@ app.patch('/profile-comment/:username', (req, res) => {
   console.log(uname);
 
   Profile.findOneAndUpdate({"username": uname}, {"$set" : {comments: body}}).then((user) => {
-    res.status(200).send('Successfully updated profile!');
+    res.status(200).send({message: 'Successfully updated profile!'});
     console.log("comments updated");
   }).catch((e) => {
     res.status(e.status || 400).send(e);
@@ -303,7 +304,7 @@ app.get('/profile/:username', (req, res) => {
        }
        res.status(200).send(response);
      } else {
-       res.status(404).send();       
+       res.status(404).send();
      }
    }).catch((e) => {
      res.status(400).send({message: e.message});
@@ -317,7 +318,7 @@ app.post('/recipe', (req, res) => {
 
   // save recipe
   recipe.save().then((recipe) => {
-    res.status(200).send('Successfully saved recipe!');
+    res.status(200).send({message: 'Successfully saved recipe!'});
   }).catch((e) => {
     res.status(e.status || 400).send(e);
   })
@@ -366,7 +367,7 @@ app.patch('/recipe/edit/:id', (req, res) => {
   }
 
   Recipe.findOneAndUpdate({"_id": ObjectID(id)}, {"$set" : body}).then((recipe) => {
-    res.status(200).send('Successfully updated recipe!');
+    res.status(200).send({message: 'Successfully updated recipe!'});
     console.log("recipe updated");
   }).catch((e) => {
     res.status(e.status || 400).send(e);
