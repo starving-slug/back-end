@@ -35,6 +35,17 @@ var Profile = mongoose.model('Profile', {
   bookmarks: [{
     type: String,
     required: true,
+  }],
+   comments: [{
+    comment: {
+      type: String
+    },
+    author: {
+      type: String
+    },
+    post: {
+      type: String
+    }
   }]
 });
 

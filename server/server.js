@@ -157,8 +157,7 @@ app.get('/search', (req, res) => {
     if (recipes) {
       let response = recipes;
       res.status(200).send(response);
-    } else if (recipes.length < 1) {
-      console.log("recipe(s) not found");
+    } else if (recipes.length < 1) {console.log("recipe(s) not found");
       res.status(404).send();
     }
   }).catch((e) => {
@@ -268,30 +267,47 @@ app.post('/setProfile', (req, res) => {
   }
 })
 
+// PATCH comment
+app.patch('/profile-comment/:username', (req, res) => {
+  let body = req.body;
+  let uname = req.params.username;
+  console.log(body);
+  console.log(uname);
+
+  Profile.findOneAndUpdate({"username": uname}, {"$set" : {comments: body}}).then((user) => {
+    res.status(200).send('Successfully updated profile!');
+    console.log("comments updated");
+  }).catch((e) => {
+    res.status(e.status || 400).send(e);
+  });
+
+});
+
 // Get user profile
 app.get('/profile/:username', (req, res) => {
   let uname = req.params.username;
+
   let recipeList = Recipe.find({'author': uname}, '_id name description');
-  let profileReq = Profile.findOne({'username': uname}, 'username image description bookmarks');
+  let profileReq = Profile.findOne({'username': uname}, 'username image description bookmarks comments');
 
-
-  let promise = Promise.join(recipeList, profileReq, (recipes, profile) => {
-    console.log(recipes, profile);
-    if (profile) {
+   let promise = Promise.join(recipeList, profileReq, function(recipes, profile) {
+     if (profile) {
+      console.log(profile);
       let response = {
-        username: profile.username,
-        image: profile.image,
-        description: profile.description,
-        bookmarks: profile.bookmarks,
-        recipes: recipes || []
-      }
-      res.status(200).send(response);
-    } else {
-      res.status(404).send({message: `Missing profile info for ${uname}`});
-    }
-  }).catch((e) => {
-    res.status(400).send({message: e.message});
-  })
+         username: profile.username,
+         description: profile.description,
+         image: profile.image,
+         recipes: recipes || [],
+         bookmarks: profile.bookmarks,
+         comments: profile.comments
+       }
+       res.status(200).send(response);
+     } else {
+       res.status(404).send();       
+     }
+   }).catch((e) => {
+     res.status(400).send({message: e.message});
+   })
 })
 
 // POST /recipe
