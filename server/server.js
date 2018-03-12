@@ -27,8 +27,8 @@ db.once('open', function () {
 
 app.use(bodyParser.json());
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:4200');
-  res.header("Access-Control-Allow-Credentials", "true")
+  res.header('Access-Control-Allow-Origin', '*');
+  // res.header("Access-Control-Allow-Credentials", "true")
   res.header('Access-Control-Allow-Methods', 'PATCH, POST, GET, DELETE')
   res.header("Access-Control-Allow-Headers", "Authorization, Content-Type, Access-Control-Allow-Origin, X-Requested-With, token");
   next();
@@ -237,32 +237,28 @@ app.post('/setProfile', (req, res) => {
         if (!docs[0].profile_ID) {
           // create profile from schema
           let p = new Profile(profile);
-
-          // update profile_ID for user
-          User.findOneAndUpdate({email: docs[0].email}, {$set:{profile_ID:p.id}}, function(err, doc){
-            if(err){
-                console.log("Something wrong when updating profile_ID in user!");
-            }
-          });
+          console.log(p);
 
           p.save().then(() => {
-            res.status(200).send({message: "Successfully created profile"});
+            // update profile_ID for user
+            User.findOneAndUpdate({email: docs[0].email}, {$set:{profile_ID:p.id}}).then((doc) => {
+              res.status(200).send({message: "Successfully created profile"});
+            });
           }).catch((e) => {
+            console.log(e.message);
             res.status(400).send({ message: "profile creation failed" });
           });
           // and now save profile
         } else {
           // user already has profile and wants to update it
-          Profile.findOneAndUpdate({email: docs[0].email}, {$set: profile}, function(err, doc){
-            if(err){
-                console.log("Something wrong when updating profile!");
-            }
+          Profile.findOneAndUpdate({email: docs[0].email}, {$set: profile}).then((doc) => {
             res.status(200).send({message: "Successfully updated profile"});
           });
         }
 
       }
     }).catch(function (e) {
+      console.log(e.message);
       res.status(400).send({message: e.message});
     })
   }
