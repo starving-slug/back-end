@@ -183,51 +183,113 @@ function setRegex(list) {
 
 // POST profile
 app.post('/setProfile', (req, res) => {
+  let token = req.headers.token;
+  let profile = req.body;
+
   // check if user session exists and is valid
-  console.log("/users/setProfile running", req.session, req.body)
-  if (req.session && req.session.user) {
-    User.findOne({ email: req.session.user.email }, function (err, user) {
-      if (!user) {
-        // if the user isn't found in the DB, reset the session info and
-        // redirect the user to the login page
-        req.session.reset();
-        res.redirect('/');
-      } else {
-        // create profile 
-        let body = _.pick(req.body, ['email', 'username', 'name', 'image', 'description']);
+  if (token) {
+    User.find({'token': token}).exec((err, docs) => {
+      // save profile or whatever else 
+      if (docs && docs.length) {
 
-        let profile = new Profile({ 
-          email: body.email,
-          username: body.username,
-          image: body.image, 
-          description: body.description 
-        });
+        if (!docs[0].profile_ID) {
+          // create profile from schema
+          let p = new Profile(profile);
 
-        User.findOneAndUpdate( { email: req.session.user.email }, { $set: { profile_ID: profile.id } }, (err, doc) => {
-          if(err){
-            console.log("Something wrong when updating data!");
-            res.status(400).send("User could not be found");
-          }
-          console.log(doc);
-        })
-        
-        profile.save().then((profile) => {
-          console.log(profile);
+          // update profile_ID for user
+          User.findOneAndUpdate({email: docs[0].email}, {$set:{profile_ID:p.id}}, function(err, doc){
+            if(err){
+                console.log("Something wrong when updating profile_ID in user!");
+            }
+          });
 
-          // update session to hold the newly added profile_ID
-          req.session.user = user;
-          res.status(200).send({ message: `Successfully saved profile for ${body.email}` });
-          console.log('profile saved');
-        }).catch((e) => {
-          console.log(e.message);
-          res.status(400).send({ message: e.message });
-        });
+          p.save().then(() => {
+            res.status(200).send({message: "Successfully created profile"});
+          }).catch((e) => {
+            res.status(400).send({ message: "profile creation failed" });
+          });
+          // and now save profile
+        } else {
+          // user already has profile and wants to update it
+          Profile.findOneAndUpdate({email: docs[0].email}, {$set: profile}, function(err, doc){
+            if(err){
+                console.log("Something wrong when updating profile!");
+            }
+            res.status(200).send({message: "Successfully updated profile"});
+          });
+        }
+
       }
-    });
-  } else {
-    // if user session does not exit or is not valid. then redirect to login (home page in this case)
-    res.status(400).send({  });
+    }).catch(function (e) {
+      res.status(400).send({message: e.message});
+    })
   }
+
+  // if (req.session && req.session.user) {
+  //   User.findOne({ email: req.session.user.email }, function (err, user) {
+  //     if (!user) {
+  //       // if the user isn't found in the DB, reset the session info and
+  //       // redirect the user to the login page
+  //       req.session.reset();
+  //       res.redirect('/');
+  //     } else {
+  //       // create profile 
+  //       let body = _.pick(req.body, ['email', 'username', 'name', 'image', 'description']);
+
+  // if (req.session && req.session.user) {
+  //   User.findOne({ email: req.session.user.email }, function (err, user) {
+  //     if (!user) {
+  //       // if the user isn't found in the DB, reset the session info and
+  //       // redirect the user to the login page
+  //       req.session.reset();
+  //       res.redirect('/');
+  //     } else {
+  //       // create profile 
+  //       let body = _.pick(req.body, ['email', 'username', 'name', 'image', 'description']);
+
+  // if (req.session && req.session.user) {
+  //   User.findOne({ email: req.session.user.email }, function (err, user) {
+  //     if (!user) {
+  //       // if the user isn't found in the DB, reset the session info and
+  //       // redirect the user to the login page
+  //       req.session.reset();
+  //       res.redirect('/');
+  //     } else {
+  //       // create profile 
+  //       let body = _.pick(req.body, ['email', 'username', 'name', 'image', 'description']);
+
+  //       let profile = new Profile({ 
+  //         email: body.email,
+  //         username: body.username,
+  //         image: body.image, 
+  //         description: body.description 
+  //       });
+
+  //       User.findOneAndUpdate( { email: req.session.user.email }, { $set: { profile_ID: profile.id } }, (err, doc) => {
+  //         if(err){
+  //           console.log("Something wrong when updating data!");
+  //           res.status(400).send("User could not be found");
+  //         }
+  //         console.log(doc);
+  //       })
+        
+  //       profile.save().then((profile) => {
+  //         console.log(profile);
+
+  //         // update session to hold the newly added profile_ID
+  //         req.session.user = user;
+  //         res.status(200).send({ message: `Successfully saved profile for ${body.email}` });
+  //         console.log('profile saved');
+  //       }).catch((e) => {
+  //         console.log(e.message);
+  //         res.status(400).send({ message: e.message });
+  //       });
+  //     }
+  //   });
+  // } else {
+  //   // if user session does not exit or is not valid. then redirect to login (home page in this case)
+  //   res.status(400).send({  });
+  // }
 })
 
 // Get user profile
