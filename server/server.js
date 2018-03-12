@@ -8,7 +8,7 @@ const bodyParser = require('body-parser');
 const { ObjectID } = require('mongodb');
 const Promise = require('bluebird');
 const rp = require('request-promise');
-const session = require('client-sessions');
+const jwt = require('jsonwebtoken');
 
 let { mongoose } = require('./db/mongoose');
 let { User } = require('./models/user');
@@ -27,36 +27,35 @@ db.once('open', function () {
 
 app.use(bodyParser.json());
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Origin', 'http://localhost:4200');
+  res.header("Access-Control-Allow-Credentials", "true")
   res.header('Access-Control-Allow-Methods', 'PATCH, POST, GET, DELETE')
   res.header("Access-Control-Allow-Headers", "Authorization, Content-Type, Access-Control-Allow-Origin, X-Requested-With");
   next();
 })
 
-app.use(session({
-  cookieName: 'session',
-  secret: 'random_string_goes_here',
-  duration: 30 * 60 * 1000,
-  activeDuration: 5 * 60 * 1000
-}));
-
-// POST User
+// post user
 // authenticates id_token
 // creates a new user if username does not exist
-// sends back user session token
-app.post('/users', (req, res) => {
-  console.log(req.body);
+// sends back user session token as a cookie with set-cookie
+app.post('/user', (req, res) => {
   let token = req.body.id_token;
 
-  console.log("/users running");
+  console.log("/user running");
   const url = `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${token}`;
 
   rp(url)
     .then((body) => {
       let json = JSON.parse(body);
 
+      let payload = {
+        "email": json.email,
+        "profile_ID": ""
+      }
+
       let user = new User({
-        "email": json.email
+        "email": json.email,
+        "profile_ID": ""
       });
 
       // check if user already has an account
@@ -64,41 +63,63 @@ app.post('/users', (req, res) => {
 
         // if any user with specified email
         if (docs && docs.length) {
-          console.log('this user account exists');
-          req.session.user = docs[0];
-          // does user have a profile?
           if (docs[0].profile_ID) {
-            // profile ID exists but does the profile still exist in db?
-            Profile.findById(docs[0].profile_ID, (err, profile) => {
-              if (err) {
-                // user exists and profile_ID is filled but no profile exists
-                console.log("User exists but profile does not");
-                res.status(200).send({message: "Found user, sending back user session token", newLogin: true});
-              }
+            // both user and profile exist
+            payload.profile_ID = docs[0].profile_ID;
 
-              // both user and profile exist
-              res.status(200).send({message: "Found user, sending back user session token", newLogin: false});
+            // create token
+            let token = jwt.sign(payload, "asdwerbldsfiuawer", {
+              expiresIn: 1440 // expires in 24 hours
             });
+
+            // save token to the database for the user
+            User.findOneAndUpdate({email: user.email}, {$set:{token:token}}, function(err, doc){
+              if(err){
+                  console.log("Something wrong when updating token!");
+              }
+            });
+            
+            res.status(200).send({message: "Found user, sending back user session token", newLogin: false, token: token});
           } else {
             // user created but no profile exists
-            res.status(200).send({message: "Found user, sending back user session token", newLogin: true});
-          }
+            
+            // create token
+            let token = jwt.sign(payload, "asdwerbldsfiuawer", {
+              expiresIn: 1440 // expires in 24 hours
+            });
 
+            // save token to the database for the user
+            User.findOneAndUpdate({email: user.email}, {$set:{token:token}}, function(err, doc){
+              if(err){
+                  console.log("Something wrong when updating token!");
+              }
+            });
+
+            res.status(200).send({message: "Found user, sending back user session token", newLogin: true, token: token});
+          }
         } else {
           // no user with this email found, creating new user
-          console.log('User account created, prompt for profile creation');
+
+          // create token
+          let token = jwt.sign(payload, "asdwerbldsfiuawer", {
+            expiresIn: 1440 // expires in 24 hours
+          });
+
+          // save token to uesr
+          user.token = token;
+
           user.save().then((new_user) => {
-            req.session.user = new_user;
-            res.status(200).send({message: "Successfully created User, sending back user session token", newLogin: true});
+            res.status(200).send({message: "Successfully created User, sending back user session token", newLogin: true, token: token});
           }).catch((e) => {
-            console.log(e.message);
             res.status(400).send({ message: e.message });
           });
         }
       });
 
+
+
     }).catch(function (e) {
-      console.log("ID_Token invalid", e.message);
+      // console.log("ID_Token invalid", e.message);
       res.status(400).send({message: e.message});
     });
 });
@@ -163,6 +184,7 @@ function setRegex(list) {
 // POST profile
 app.post('/setProfile', (req, res) => {
   // check if user session exists and is valid
+  console.log("/users/setProfile running", req.session, req.body)
   if (req.session && req.session.user) {
     User.findOne({ email: req.session.user.email }, function (err, user) {
       if (!user) {
@@ -204,7 +226,7 @@ app.post('/setProfile', (req, res) => {
     });
   } else {
     // if user session does not exit or is not valid. then redirect to login (home page in this case)
-    res.redirect('/');
+    res.status(400).send({  });
   }
 })
 

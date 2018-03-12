@@ -25,6 +25,9 @@ var User = mongoose.model('User', {
   },
   profile_ID: {
     type: String
+  },
+  token: {
+    type: String
   }
 });
 
