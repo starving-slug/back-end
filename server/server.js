@@ -8,7 +8,7 @@ const bodyParser = require('body-parser');
 const { ObjectID } = require('mongodb');
 const Promise = require('bluebird');
 const rp = require('request-promise');
-const session = require('client-sessions');
+const jwt = require('jsonwebtoken');
 
 let { mongoose } = require('./db/mongoose');
 let { User } = require('./models/user');
@@ -28,64 +28,98 @@ db.once('open', function () {
 app.use(bodyParser.json());
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
+  // res.header("Access-Control-Allow-Credentials", "true")
   res.header('Access-Control-Allow-Methods', 'PATCH, POST, GET, DELETE')
-  res.header("Access-Control-Allow-Headers", "Authorization, Content-Type, Access-Control-Allow-Origin, X-Requested-With");
+  res.header("Access-Control-Allow-Headers", "Authorization, Content-Type, Access-Control-Allow-Origin, X-Requested-With, token");
   next();
 })
 
-app.use(session({
-  cookieName: 'session',
-  secret: 'fkalsrbq24kljfd89u23l4jk',
-  duration: 30 * 60 * 1000,
-  activeDuration: 5 * 60 * 1000,
-  cookie: {
-    path: '/users', // cookie will only be sent to requests under '/api'
-    maxAge: 60000, // duration of the cookie in milliseconds, defaults to duration above
-    ephemeral: false, // when true, cookie expires when the browser closes
-    httpOnly: true, // when true, cookie is not accessible from javascript
-    secure: false // when true, cookie will only be sent over SSL. use key 'secureProxy' instead if you handle SSL not in your node process
-  }
-}));
-
-// POST User
+// post user
 // authenticates id_token
 // creates a new user if username does not exist
-// sends back user session token
+// sends back user session token as a cookie with set-cookie
 app.post('/users', (req, res) => {
-  console.log(req.body);
   let token = req.body.id_token;
 
-  console.log("/users running");
+  console.log("/user running");
   const url = `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${token}`;
 
   rp(url)
     .then((body) => {
       let json = JSON.parse(body);
-      console.log(json);
+
+      let payload = {
+        "email": json.email,
+        "profile_ID": ""
+      }
+
       let user = new User({
-        "email": json.email
+        "email": json.email,
+        "profile_ID": ""
       });
 
-      console.log(user.email);
       // check if user already has an account
       User.find({'email': user.email}).exec((err, docs) => {
-        console.log(docs, docs.length);
+
+        // if any user with specified email
         if (docs && docs.length) {
-          // user has an account
-          req.session.user = user;
-          res.status(200).send({message: "Found user, sending back user session token", newLogin: false});
+          if (docs[0].profile_ID) {
+            // both user and profile exist
+            payload.profile_ID = docs[0].profile_ID;
+
+            // create token
+            let token = jwt.sign(payload, "asdwerbldsfiuawer", {
+              expiresIn: 1440 // expires in 24 hours
+            });
+
+            // save token to the database for the user
+            User.findOneAndUpdate({email: user.email}, {$set:{token:token}}, function(err, doc){
+              if(err){
+                  console.log("Something wrong when updating token!");
+              }
+            });
+
+            res.status(200).send({message: "Found user, sending back user session token", newLogin: false, token: token});
+          } else {
+            // user created but no profile exists
+
+            // create token
+            let token = jwt.sign(payload, "asdwerbldsfiuawer", {
+              expiresIn: 1440 // expires in 24 hours
+            });
+
+            // save token to the database for the user
+            User.findOneAndUpdate({email: user.email}, {$set:{token:token}}, function(err, doc){
+              if(err){
+                  console.log("Something wrong when updating token!");
+              }
+            });
+
+            res.status(200).send({message: "Found user, sending back user session token", newLogin: true, token: token});
+          }
         } else {
-          user.save().then((user) => {
-            req.session.user = user;
-            res.status(200).send({message: "Successfully created User, sending back user session token", newLogin: true});
+          // no user with this email found, creating new user
+
+          // create token
+          let token = jwt.sign(payload, "asdwerbldsfiuawer", {
+            expiresIn: 1440 // expires in 24 hours
+          });
+
+          // save token to uesr
+          user.token = token;
+
+          user.save().then((new_user) => {
+            res.status(200).send({message: "Successfully created User, sending back user session token", newLogin: true, token: token});
           }).catch((e) => {
             res.status(400).send({ message: e.message });
           });
         }
       });
 
+
+
     }).catch(function (e) {
-      console.log("An error occurred", e.message);
+      // console.log("ID_Token invalid", e.message);
       res.status(400).send({message: e.message});
     });
 });
@@ -98,7 +132,7 @@ app.get('/users/:username', (req, res) => {
     if (user) {
       res.status(200).send(user);
     } else {
-      res.status(404).send(`${username} not found :(`);
+      res.status(404).send({message: `${username} not found :(`});
     }
   }).catch((e) => {
     res.status(400).send({ message: e.message });
@@ -123,8 +157,7 @@ app.get('/search', (req, res) => {
     if (recipes) {
       let response = recipes;
       res.status(200).send(response);
-    } else if (recipes.length < 1) {
-      console.log("recipe(s) not found");
+    } else if (recipes.length < 1) {console.log("recipe(s) not found");
       res.status(404).send();
     }
   }).catch((e) => {
@@ -147,95 +180,131 @@ function setRegex(list) {
   return listReg;
 }
 
-// POST profile
-app.post('/users/setProfile', (req, res) => {
-  // check if user session exists and is valid
-  if (req.session && req.session.user) {
-    User.findOne({ email: req.session.user.email }, function (err, user) {
-      if (!user) {
-        // if the user isn't found in the DB, reset the session info and
-        // redirect the user to the login page
-        req.session.reset();
-        res.redirect('/');
-      } else {
-        // create profile 
-        let body = _.pick(req.body, ['email', 'username', 'name', 'image', 'description']);
+app.post('/bookmark/:id', (req, res) => {
+  console.log(req.params)
+  let recipe_id = req.params.id;
+  let body = _.pick(req.body, ['username']);
+  Recipe.findOne({"_id": ObjectID(recipe_id)}, 'name').then((recipe) => {
+    console.log(recipe);
 
-        let profile = new Profile({ 
-          email: body.email,
-          username: body.username,
-          image: body.image, 
-          description: body.description 
-        });
+    let query = {username: body.username};
+    let update = {bookmarks: [recipe_id]};
 
-        User.findOneAndUpdate( { email: req.session.user.email }, { $set: { profile_ID: profile.id } }, (err, doc) => {
-          if(err){
-            console.log("Something wrong when updating data!");
-            res.status(400).send("User could not be found");
-          }
-          console.log(doc);
-        })
-        // .catch((e) => {
-        //   res.status(400).send({ message: e.message });
-        // });
-
-        profile.save().then((profile) => {
-          console.log(profile);
-
-          // update session to hold the newly added profile_ID
-          req.session.user = user;
-          res.status(200).send({ message: `Successfully saved profile for ${body.email}` });
-          console.log('profile saved');
-        }).catch((e) => {
-          console.log(e.message);
-          res.status(400).send({ message: e.message });
-        });
-      }
+    console.log(update);
+    Profile.findOneAndUpdate(query, {"$push" : update}).then((profile) => {
+      console.log(profile);
+      res.status(200).send({message: `Successfully bookmarked recipe id ${recipe_id}`});
     });
-  } else {
-    // if user session does not exit or is not valid. then redirect to login (home page in this case)
-    res.redirect('/');
+  }).catch((e) => {
+    console.log(e.message);
+    res.status(e.status || 500).send({message: e.message || "There was an error bookmarking " + recipe_id});
+  })
+})
+
+app.post('/unbookmark/:id', (req, res) => {
+  console.log(req.params)
+  let recipe_id = req.params.id;
+  let body = _.pick(req.body, ['username']);
+  Recipe.findOne({"_id": ObjectID(recipe_id)}, 'name').then((recipe) => {
+    console.log(recipe);
+
+    let query = {username: body.username};
+    let update = {bookmarks: [recipe_id]};
+
+    console.log(update);
+    Profile.findOneAndUpdate(query, {"$pull" : update}).then((profile) => {
+      console.log(profile);
+      res.status(200).send({message: `Successfully bookmarked recipe id ${recipe_id}`});
+    });
+  }).catch((e) => {
+    console.log(e.message);
+    res.status(e.status || 500).send({message: e.message || "There was an error bookmarking " + recipe_id});
+  })
+})
+
+// POST profile
+app.post('/setProfile', (req, res) => {
+  console.log('Running setProfile');
+  let token = req.headers.token;
+  let profile = req.body;
+
+  // check if user session exists and is valid
+  if (token) {
+    User.find({'token': token}).exec((err, docs) => {
+      // save profile or whatever else
+      if (docs && docs.length) {
+
+        if (!docs[0].profile_ID) {
+          // create profile from schema
+          let p = new Profile(profile);
+          console.log(p);
+
+          p.save().then(() => {
+            // update profile_ID for user
+            User.findOneAndUpdate({email: docs[0].email}, {$set:{profile_ID:p.id}}).then((doc) => {
+              res.status(200).send({message: "Successfully created profile"});
+            });
+          }).catch((e) => {
+            console.log(e.message);
+            res.status(400).send({ message: "profile creation failed" });
+          });
+          // and now save profile
+        } else {
+          // user already has profile and wants to update it
+          Profile.findOneAndUpdate({email: docs[0].email}, {$set: profile}).then((doc) => {
+            res.status(200).send({message: "Successfully updated profile"});
+          });
+        }
+
+      }
+    }).catch(function (e) {
+      console.log(e.message);
+      res.status(400).send({message: e.message});
+    })
   }
 })
+
+// PATCH comment
+app.patch('/profile-comment/:username', (req, res) => {
+  let body = req.body;
+  let uname = req.params.username;
+  console.log(body);
+  console.log(uname);
+
+  Profile.findOneAndUpdate({"username": uname}, {"$set" : {comments: body}}).then((user) => {
+    res.status(200).send({message: 'Successfully updated profile!'});
+    console.log("comments updated");
+  }).catch((e) => {
+    res.status(e.status || 400).send(e);
+  });
+
+});
 
 // Get user profile
 app.get('/profile/:username', (req, res) => {
   let uname = req.params.username;
-  let recipeList = Recipe.find({ 'author': uname }, '_id name description');
-  let profileReq = Profile.findOne({ 'username': uname }, 'username image description');
 
-  // let promise = Promise.join(recipeList, profileReq, function(recipes, profile) {
-  //   console.log(recipes, profile);
-  //   if (recipes && profile) {
-  //     let response = {
-  //       username: profile.username,
-  //       description: profile.description,
-  //       image: profile.image,
-  //       recipes: recipes
-  //     }
-  //     res.status(200).send(response);
-  //   }
-  //   res.status(404).send();
-  // }).catch((e) => {
-  //   res.status(400).send({message: e.message});
-  // })
+  let recipeList = Recipe.find({'author': uname}, '_id name description');
+  let profileReq = Profile.findOne({'username': uname}, 'username image description bookmarks comments');
 
-  Recipe.find({ 'author': uname }, '_id name description').then((recipes) => {
-    console.log(recipes);
-    if (recipes) {
+   let promise = Promise.join(recipeList, profileReq, function(recipes, profile) {
+     if (profile) {
+      console.log(profile);
       let response = {
-        username: uname,
-        description: 'Test description',
-        recipes: recipes
-      }
-      console.log(response)
-      res.status(200).send(response);
-    } else {
-      res.status(404).send();
-    }
-  }).catch((e) => {
-    res.status(400).send({ message: e.message })
-  })
+         username: profile.username,
+         description: profile.description,
+         image: profile.image,
+         recipes: recipes || [],
+         bookmarks: profile.bookmarks,
+         comments: profile.comments
+       }
+       res.status(200).send(response);
+     } else {
+       res.status(404).send();
+     }
+   }).catch((e) => {
+     res.status(400).send({message: e.message});
+   })
 })
 
 // PATCH /rating
@@ -264,7 +333,7 @@ app.post('/recipe', (req, res) => {
 
   // save recipe
   recipe.save().then((recipe) => {
-    res.status(200).send('Successfully saved recipe!');
+    res.status(200).send({message: 'Successfully saved recipe!'});
   }).catch((e) => {
     res.status(e.status || 400).send(e);
   })
@@ -299,16 +368,6 @@ app.get('/recipe/:id', (req, res) => {
     console.log(e);
     res.status(400).send(e);
   });
-
-  // // find recipe by ID
-  // Recipe.findById(id).then((recipe) => {
-  //   if(recipe) {
-  //     res.send(200).send(recipe);
-  //   }
-  //   res.status(404).send();
-  // }).catch((e) => {
-  //   res.status(400).send(e);
-  // });
 })
 
 // PATCH /recipe/edit/:id
@@ -323,7 +382,7 @@ app.patch('/recipe/edit/:id', (req, res) => {
   }
 
   Recipe.findOneAndUpdate({"_id": ObjectID(id)}, {"$set" : body}).then((recipe) => {
-    res.status(200).send('Successfully updated recipe!');
+    res.status(200).send({message: 'Successfully updated recipe!'});
     console.log("recipe updated");
   }).catch((e) => {
     res.status(e.status || 400).send(e);
@@ -359,4 +418,4 @@ app.listen(port, () => {
 });
 
 module.exports = { app };
-// 
+//

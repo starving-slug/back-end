@@ -19,11 +19,14 @@ var User = mongoose.model('User', {
     minlength: 1,
     unique: true,
     validate: {
-      validator: validator.isEmail,
-      message: '{VALUE} is not a valid email'
+    validator: validator.isEmail,
+    message: '{VALUE} is not a valid email'
     }
   },
   profile_ID: {
+    type: String
+  },
+  token: {
     type: String
   }
 });
