@@ -162,7 +162,7 @@ app.get('/search', (req, res) => {
   let tagList = setRegex(req.query.tag);
 
   // Search: { (n1 OR n2 OR ... OR nk) AND (a1 OR a2 OR ... OR ak) AND (tag1 AND tag2 AND ... AND tagk) }
-  Recipe.find({'$and': [{'name': nameList}, {'author': authorList}, {'tags': {'$all': tagList}}]}, '_id name author description tags').then((recipes) => {
+  Recipe.find({'$and': [{'name': nameList}, {'author': authorList}, {'tags': {'$all': tagList}}]}, '_id name author description tags photo').then((recipes) => {
     console.log(recipes);
     if (recipes) {
       let response = recipes;
