@@ -79,7 +79,17 @@ app.post('/users', (req, res) => {
               }
             });
 
-            res.status(200).send({message: "Found user, sending back user session token", newLogin: false, token: token});
+            Profile.findById(docs[0].profile_ID, (err, profile) => {
+              if (profile) {
+                console.log(profile.username)
+                res.status(200).send({message: "Found user, sending back user session token", newLogin: false, token: token, username: profile.username});
+              } else {
+                res.status(200).send({message: "Found user, sending back user session token", newLogin: true, token: token});
+              }
+            }).catch((e) => {
+              console.log(e);
+              res.status(400).send(e);
+            });
           } else {
             // user created but no profile exists
 
@@ -242,17 +252,17 @@ app.post('/setProfile', (req, res) => {
           p.save().then(() => {
             // update profile_ID for user
             User.findOneAndUpdate({email: docs[0].email}, {$set:{profile_ID:p.id}}).then((doc) => {
-              res.status(200).send({message: "Successfully created profile"});
+              res.status(200).send({message: "Successfully created profile", username: profile.username});
             });
           }).catch((e) => {
             console.log(e.message);
-            res.status(400).send({ message: "profile creation failed" });
+            res.status(400).send({ message: "profile creation failed"});
           });
           // and now save profile
         } else {
           // user already has profile and wants to update it
           Profile.findOneAndUpdate({email: docs[0].email}, {$set: profile}).then((doc) => {
-            res.status(200).send({message: "Successfully updated profile"});
+            res.status(200).send({message: "Successfully updated profile", username: profile.username});
           });
         }
 
