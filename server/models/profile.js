@@ -2,16 +2,6 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 
 var Profile = mongoose.model('Profile', {
-  email: {
-    type: String,
-    trim: true,
-    minlength: 1,
-    unique: true,
-    validate: {
-      validator: validator.isEmail,
-      message: '{VALUE} is not a valid email'
-    }
-  },
   username: {
     type: String,
     trim: true,
@@ -26,11 +16,6 @@ var Profile = mongoose.model('Profile', {
     type: String,
     require: true,
     minlength: 6
-  },
-  description: {
-    type: String,
-    require: false,
-    minlength: 1,
   },
   bookmarks: [{
     type: String,

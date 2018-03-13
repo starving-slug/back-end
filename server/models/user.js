@@ -12,7 +12,7 @@ const validator = require('validator');
 // }
 
 var User = mongoose.model('User', {
-  email: {
+  username: {
     type: String,
     required: true,
     trim: true,

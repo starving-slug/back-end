@@ -48,20 +48,22 @@ app.post('/users', (req, res) => {
     .then((body) => {
       let json = JSON.parse(body);
 
+      let profile = new Profile({
+        "username": json.email,
+        "name": json.name,
+        "image": json.image
+      });
+
       let payload = {
-        "email": json.email,
+        "username": json.email,
         "profile_ID": ""
       }
 
-      let user = new User({
-        "email": json.email,
-        "profile_ID": ""
-      });
+      let user = new User(payload);
 
       // check if user already has an account
-      User.find({'email': user.email}).exec((err, docs) => {
-
-        // if any user with specified email
+      User.find({'username': user.username}).exec((err, docs) => {
+        // if any user with specified username
         if (docs && docs.length) {
           if (docs[0].profile_ID) {
             // both user and profile exist
@@ -73,7 +75,7 @@ app.post('/users', (req, res) => {
             });
 
             // save token to the database for the user
-            User.findOneAndUpdate({email: user.email}, {$set:{token:token}}, function(err, doc){
+            User.findOneAndUpdate({username: user.username}, {$set:{token:token}}, function(err, doc){
               if(err){
                   console.log("Something wrong when updating token!");
               }
@@ -83,22 +85,24 @@ app.post('/users', (req, res) => {
           } else {
             // user created but no profile exists
             
+            payload.profile_ID = profile.id;
             // create token
             let token = jwt.sign(payload, "asdwerbldsfiuawer", {
               expiresIn: 1440 // expires in 24 hours
             });
 
+
             // save token to the database for the user
-            User.findOneAndUpdate({email: user.email}, {$set:{token:token}}, function(err, doc){
+            User.findOneAndUpdate({username: user.username}, {$set:{token: token, profile_ID: profile.id}}, function(err, doc){
               if(err){
                   console.log("Something wrong when updating token!");
               }
             });
 
-            res.status(200).send({message: "Found user, sending back user session token", newLogin: true, token: token});
+            res.status(200).send({message: "Found user, sending back user session token", newLogin: false, token: token});
           }
         } else {
-          // no user with this email found, creating new user
+          // no user with this username found, creating new user
 
           // create token
           let token = jwt.sign(payload, "asdwerbldsfiuawer", {
@@ -107,9 +111,14 @@ app.post('/users', (req, res) => {
 
           // save token to uesr
           user.token = token;
+          user.profile_ID = profile.id;
+
+          profile.save().catch((e) => {
+            res.status(400).send({ message: e.message });
+          });
 
           user.save().then((new_user) => {
-            res.status(200).send({message: "Successfully created User, sending back user session token", newLogin: true, token: token});
+            res.status(200).send({message: "Successfully created User, sending back user session token", newLogin: false, token: token});
           }).catch((e) => {
             res.status(400).send({ message: e.message });
           });
