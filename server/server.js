@@ -178,7 +178,7 @@ app.get('/search', (req, res) => {
 // Transform tag(s) in a string (or array) into a regex that ignores capitalization
 function setRegex(list) {
   let listReg = [];
-  if (typeof list == "string") { // One tag (string)
+  if (typeof list == "string" && list != "undefined") { // One tag (string)
     listReg = new RegExp(list, "i");
   }else if (Object.prototype.toString.call(list) == "[object Array]") { // Multiple tags (array)
     //listReg = new RegExp(list.join("|"), "i"); // OR (word1|word2)
